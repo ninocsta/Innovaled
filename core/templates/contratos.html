@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Contratos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4 text-center">📑 Lista de Contratos</h1>
+
+    <!-- Filtros e Botões -->
+    <div class="d-flex justify-content-between align-items-center mb-4 gap-2">
+        <!-- Filtros -->
+        {% include "partials/filtros_contratos.html" %}
+
+        <!-- Botões -->
+        <div class="gap-2 d-flex">
+            <a href="{% url 'contrato_create' %}" class="btn btn-primary me-2">Novo Contrato</a>
+            <button class="btn btn-secondary" disabled>Gerar Relatório</button>
+        </div>
+    </div>
+
+    <!-- Tabela de Contratos -->
+    <div class="table-responsive">
+        <table class="table table-dark table-striped table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Cliente</th>
+                    <th>CPF/CNPJ</th>
+                    <th>Vendedor</th>
+                    <th>Telão</th>
+                    <th>Status Vídeo</th>
+                    <th>Data Assinatura</th>
+                    <th>Valor Total</th>
+                    <th>Status Contrato</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contrato in page_obj %}
+                <tr>
+                    <td>{{ contrato.id_contrato }}</td>
+                    <td>{{ contrato.cliente.razao_social }}</td>
+                    <td>{{ contrato.cliente.cpf_cnpj }}</td>
+                    <td>{{ contrato.vendedor.nome }}</td>
+                    <td>{{ contrato.video.local.nome }}</td>
+                    <td>
+                        {% if contrato.video and contrato.video.status %}
+                            <span class="badge bg-success">ON</span>
+                        {% else %}
+                            <span class="badge bg-danger">OFF</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ contrato.data_assinatura|date:"d/m/Y" }}</td>
+                    <td>R$ {{ contrato.valor_total }}</td>
+                    <td>{{ contrato.status.nome_status }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center text-muted">Nenhum contrato encontrado.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginação -->
+    {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

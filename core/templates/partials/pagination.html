@@ -1,0 +1,47 @@
+{% if page_obj.has_other_pages %}
+<style>
+    .pagination .page-link {
+    color: #f8f9fa; /* Cinza claro, ajuste para a cor desejada */
+}
+
+.pagination .page-link:hover {
+    color: #ffffff; /* Branco puro ao passar o mouse */
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #000000; /* Cor de fundo do item ativo */
+    border-color: #fdfeff;
+    border-radius: 20%;
+    color: #ffffff; /* Texto branco no item ativo */
+}
+</style>
+<nav aria-label="Navegação de página">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link text-light" href="?page=1{{ extra_query }}">&laquo; Primeiro</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link text-light" href="?page={{ page_obj.previous_page_number }}{{ extra_query }}">Anterior</a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link text-light">{{ num }}</span></li>
+            {% elif num >= page_obj.number|add:-2 and num <= page_obj.number|add:2 %}
+                <li class="page-item"><a class="page-link text-light" href="?page={{ num }}{{ extra_query }}">{{ num }}</a></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link text-light" href="?page={{ page_obj.next_page_number }}{{ extra_query }}">Próxima</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link text-light" href="?page={{ page_obj.paginator.num_pages }}{{ extra_query }}">Última &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}

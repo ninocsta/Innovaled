@@ -1,0 +1,41 @@
+<form method="get" class="row g-3 mb-4">
+    <div class="col-md-2">
+        <input type="text" name="nome" value="{{ query_nome }}" class="form-control" placeholder="Razão Social">
+    </div>
+    <div class="col-md-2">
+        <input type="text" name="cnpj" value="{{ query_cnpj }}" class="form-control" placeholder="CPF/CNPJ">
+    </div>
+    <div class="col-md-2">
+        <select name="vendedor" class="form-select">
+            <option value="">-- Vendedor --</option>
+            {% for v in vendedores %}
+                <option value="{{ v.id }}" {% if query_vendedor|add:'' == v.id|stringformat:"s" %}selected{% endif %}>{{ v.nome }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select name="local" class="form-select">
+            <option value="">-- Telão --</option>
+            {% for l in locais %}
+                <option value="{{ l.id }}" {% if query_local|add:'' == l.id|stringformat:"s" %}selected{% endif %}>{{ l.nome }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <input type="date" name="data_inicio" value="{{ query_data_inicio }}" class="form-control">
+    </div>
+    <div class="col-md-2">
+        <input type="date" name="data_fim" value="{{ query_data_fim }}" class="form-control">
+    </div>
+    <div class="col-md-1 d-grid">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+    </div>
+
+    <div class="col-md-2 mt-2">
+        <select name="itens" class="form-select" onchange="this.form.submit()">
+            <option value="10" {% if itens_por_pagina == 10 %}selected{% endif %}>10 por página</option>
+            <option value="25" {% if itens_por_pagina == 25 %}selected{% endif %}>25 por página</option>
+            <option value="50" {% if itens_por_pagina == 50 %}selected{% endif %}>50 por página</option>
+        </select>
+    </div>
+</form>
