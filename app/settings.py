@@ -127,8 +127,23 @@ DECIMAL_SEPARATOR = ','  # Separador decimal como vírgula
 THOUSAND_SEPARATOR = '.'  # Separador de milhar como ponto
 NUMBER_GROUPING = 3  # Agrupamento a cada três dígitos
 
+
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
+# Para dev: onde ficam os arquivos estáticos do projeto
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
+# Para prod: onde o collectstatic vai jogar todos os arquivos
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+
+#### COLOCAR EM PRODUCAO ASSIM ########
+####STATIC_URL = '/static/'
+###STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+####
+
 
 MEDIA_URL = '/protected_media/'  # Essa URL não será mais servida diretamente
 MEDIA_ROOT = os.path.join(BASE_DIR, 'protected_media')  # Diretório protegido

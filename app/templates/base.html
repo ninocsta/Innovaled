@@ -1,22 +1,70 @@
 <!DOCTYPE html>
 <html lang="pt-br" id="htmlElement" data-bs-theme="dark">
-
 <head>
   {% load static %}
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %} {% endblock %}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <title>{% block title %}{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 </head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom shadow-sm ">
+    <div class="container-fluid">
+      <!-- Logo / Nome do sistema -->
+      <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">   
+        <img src="{% static 'logo.jpg' %}" alt="Logo Innova LED" class="img-fluid rounded" style="max-width: 150px; max-height: 50px;">
+      </a>
+      <!-- Botão responsivo -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Alternar navegação">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-<body> 
-    <main>
+      <!-- Links -->
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="#"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'pendencias_video' %}"><i class="bi bi-camera-video me-1"></i> Pendência de Vídeo</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'pendencias_pagamento' %}"><i class="bi bi-cash-coin me-1"></i> Pendência de Pagamento</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'contratos_list' %}"><i class="bi bi-file-earmark-text me-1"></i> Contratos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/admin/"><i class="bi bi-gear me-1"></i> Admin</a>
+          </li>
+        </ul>
+
+        <!-- Usuário logado -->
+        {% if user.is_authenticated %}
+          <span class="navbar-text me-3">
+            <i class="bi bi-person-circle"></i> {{ user.username }}
+          </span>
+          <a href="#" class="btn btn-outline-light btn-sm">Sair</a>
+        {% else %}
+          <a href="#" class="btn btn-outline-light btn-sm">Entrar</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Conteúdo principal -->
+  <main class="container-fluid mt-4">
     {% block content %}
     {% endblock %}
-    </main>        
-    
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-</body>
+  </main>
 
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+    crossorigin="anonymous"></script>
+</body>
 </html>

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-light mb-4">📺 Pendências de Vídeo</h2>
+
+    {% if contratos %}
+        <div class="row">
+            {% for contrato in contratos %}
+                <div class="col-md-6 mb-3">
+                    <div class="card shadow bg-dark border-danger text-light">
+                        <div class="card-body">
+                            <h5 class="card-title">Contrato #{{ contrato.id_contrato }}</h5>
+                            <p><strong>Cliente:</strong> {{ contrato.cliente.razao_social }}</p>
+                            <p><strong>Primeiro pagamento:</strong> {{ contrato.primeiro_pagamento }}</p>
+                            <p class="text-danger">🚨 Vídeo está OFF</p>
+                            <a href="{% url 'ativar_video' contrato.id_contrato %}" class="btn btn-success">
+                                ✅ Ativar Vídeo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-success">🎉 Não há pendências de vídeo.</div>
+    {% endif %}
+</div>
+{% endblock %}

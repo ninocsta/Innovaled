@@ -1,12 +1,13 @@
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from .models import Contrato, Vendedor, Local, Cliente, StatusContrato
-from .forms import ClienteForm, ContratoForm, VideoForm
+from .forms import ClienteForm, ContratoForm, VideoForm, PagamentoForm
 from django.contrib import messages
 from django.shortcuts import redirect
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.shortcuts import get_object_or_404
 
 
 @login_required
@@ -151,3 +152,81 @@ def contrato_create(request):
             "cliente_existente": cliente_existente,
         },
     )
+
+@login_required
+def contrato_detail(request, pk):
+    contrato = get_object_or_404(Contrato, pk=pk)
+    cliente = contrato.cliente
+    video = contrato.video
+    registros = contrato.registro_set.all().order_by("-data_hora")  # histórico de registros
+
+    return render(
+        request,
+        "contrato_detail.html",
+        {
+            "contrato": contrato,
+            "cliente": cliente,
+            "video": video,
+            "registros": registros,
+        },
+    )
+
+
+# Tela de pendências de vídeo
+def pendencias_video(request):
+    contratos = Contrato.objects.filter(
+        primeiro_pagamento__isnull=False,
+        video__status=False
+    ).select_related("cliente", "video")
+    return render(request, "pendencias_video.html", {"contratos": contratos})
+
+
+# Tela de pendências de pagamento
+def pendencias_pagamento(request):
+    contratos = Contrato.objects.filter(
+        # pelo menos uma parcela pendente
+    ).select_related("cliente", "video")
+    pendentes = []
+    for c in contratos:
+        if not c.primeiro_pagamento or not c.segundo_pagamento:
+            pendentes.append(c)
+    return render(request, "pendencias_pagamento.html", {"contratos": pendentes})
+
+
+def marcar_pagamento(request, contrato_id, parcela):
+    contrato = get_object_or_404(Contrato, pk=contrato_id)
+
+    if request.method == "POST":
+        data = request.POST.get("data_pagamento")
+        if data:
+            data_pagto = data  # string YYYY-MM-DD
+        else:
+            data_pagto = timezone.now().date()
+
+        if parcela == 1:
+            contrato.primeiro_pagamento = data_pagto
+            contrato.save()
+            messages.success(request, f"Primeiro pagamento do contrato {contrato.id_contrato:05d} registrado em {data_pagto}.")
+        elif parcela == 2:
+            contrato.segundo_pagamento = data_pagto
+            contrato.save()
+            messages.success(request, f"Segundo pagamento do contrato {contrato.id_contrato:05d} registrado em {data_pagto}.")
+        
+        # Decide se volta para lista de pendências ou detail
+        if "from_detail" in request.POST:
+            return redirect("contrato_detail", contrato_id=contrato.id_contrato)
+        return redirect("pendencias_pagamento")
+
+    # Se não for POST, redireciona
+    return redirect("pendencias_pagamento")
+
+
+def ativar_video(request, contrato_id):
+    contrato = get_object_or_404(Contrato, pk=contrato_id)
+    if contrato.video:
+        contrato.video.status = True
+        contrato.video.save()
+        messages.success(request, f"Vídeo do contrato {contrato.id_contrato:05d} ativado com sucesso!")
+    if request.POST.get("from_detail"):
+        return redirect("contrato_detail", contrato_id=contrato.id_contrato)
+    return redirect("pendencias_video")

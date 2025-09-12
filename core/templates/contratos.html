@@ -13,7 +13,7 @@
 
         <!-- Botões -->
         <div class="gap-2 d-flex">
-            <a href="{% url 'contrato_create' %}" class="btn btn-primary me-2">Novo Contrato</a>
+            <a href="{% url 'contrato_create' %}" class="btn btn-primary me-2">Novo Contrato</a>            
             <button class="btn btn-secondary" disabled>Gerar Relatório</button>
         </div>
     </div>
@@ -37,7 +37,7 @@
             <tbody>
                 {% for contrato in page_obj %}
                 <tr>
-                    <td>{{ contrato.id_contrato }}</td>
+                    <td>{{ contrato.id_contrato }} <a href="{% url 'contrato_detail' contrato.pk %}"><i class="bi bi-search text-light me-2"></i></a></td>
                     <td>{{ contrato.cliente.razao_social }}</td>
                     <td>{{ contrato.cliente.cpf_cnpj }}</td>
                     <td>{{ contrato.vendedor.nome }}</td>

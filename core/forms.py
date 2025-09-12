@@ -85,3 +85,14 @@ class ContratoForm(forms.ModelForm):
             'data_ultima_parcela': 'Data da Última Parcela',
             'observacoes': 'Observações',
         }
+
+
+class PagamentoForm(forms.ModelForm):
+    class Meta:
+        model = Contrato
+        fields = ["primeiro_pagamento", "segundo_pagamento"]
+        widgets = {
+            "primeiro_pagamento": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "segundo_pagamento": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+        }
+
