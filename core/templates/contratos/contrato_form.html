@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}
+Usina - Novo Contrato
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-2">
+            <a href="{% url 'contratos_list' %}" class="btn btn-info text-light">Voltar</a>
+        </div>
+        <div class="col-md-8 text-center">
+            <h1>Novo Contrato</h1>
+        </div>
+        <div class="col-md-2"></div>
+    </div>
+
+    <!-- Mensagens de erro/sucesso -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" id="novo-contrato-form">
+        {% csrf_token %}
+
+        <!-- Dados do Cliente -->
+        <h4>👤 Dados do Cliente</h4>
+        <div class="row">
+            <div class="col-md-6 mb-2">
+                {{ cliente_form.razao_social.label_tag }}
+                {{ cliente_form.razao_social }}
+                {% if cliente_form.razao_social.errors %}
+                    <div class="invalid-feedback">{{ cliente_form.razao_social.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-6 mb-2">
+                {{ cliente_form.cpf_cnpj.label_tag }}
+                {{ cliente_form.cpf_cnpj }}
+                {% if cliente_form.cpf_cnpj.errors %}
+                    <div class="invalid-feedback">{{ cliente_form.cpf_cnpj.errors }}</div>
+                {% elif cliente_existente %}
+                    <div class="text-success">✔ Cliente já existe e será reutilizado.</div>
+                {% endif %}
+            </div>
+            <div class="col-md-6 mb-2">
+                {{ cliente_form.email.label_tag }}
+                {{ cliente_form.email }}
+                {% if cliente_form.email.errors %}
+                    <div class="invalid-feedback">{{ cliente_form.email.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-6 mb-2">
+                {{ cliente_form.telefone.label_tag }} <small class="text-muted">(opcional)</small>
+                {{ cliente_form.telefone }}
+                {% if cliente_form.telefone.errors %}
+                    <div class="invalid-feedback">{{ cliente_form.telefone.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-6 mb-2">
+                {{ cliente_form.telefone_financeiro.label_tag }} <small class="text-muted">(opcional)</small>
+                {{ cliente_form.telefone_financeiro }}
+                {% if cliente_form.telefone_financeiro.errors %}
+                    <div class="invalid-feedback">{{ cliente_form.telefone_financeiro.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-6 mb-2">
+                {{ cliente_form.email_financeiro.label_tag }} <small class="text-muted">(opcional)</small>
+                {{ cliente_form.email_financeiro }}
+                {% if cliente_form.email_financeiro.errors %}
+                    <div class="invalid-feedback">{{ cliente_form.email_financeiro.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Seção de Vídeos -->
+        <h4 class="mt-4">🎬 Vídeos</h4>
+        <div id="video-forms">
+            {{ video_formset.management_form }}
+            {% for form in video_formset %}
+            <div class="card mb-2 p-3 shadow-sm">
+                {{ form.as_p }}
+                {% if form.instance.pk %}
+                    <label>{{ form.DELETE }} Excluir este vídeo</label>
+                {% endif %}
+                {% for field in form %}
+                    {% if field.errors %}
+                        <div class="alert alert-danger">{{ field.errors }}</div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" id="add-video" class="btn btn-primary mt-2">+ Adicionar Vídeo</button>
+
+        <div id="empty-video-form" style="display:none;">
+            {{ video_formset.empty_form.as_p }}
+        </div>
+
+        <!-- Dados do Contrato -->
+        <h4 class="mt-4">📑 Dados do Contrato</h4>
+        <div class="row">
+            <div class="col-md-6 mb-2">
+                {{ contrato_form.vendedor.label_tag }}
+                {{ contrato_form.vendedor }}
+            </div>
+            <div class="col-md-6 mb-2">
+                {{ contrato_form.banco.label_tag }} <small class="text-muted">(opcional)</small>
+                {{ contrato_form.banco }}
+            </div>
+            <div class="col-md-6 mb-2">
+                {{ contrato_form.vigencia_meses.label_tag }}
+                {{ contrato_form.vigencia_meses }}
+            </div>
+            <div class="col-md-6 mb-2">
+                {{ contrato_form.valor_mensalidade.label_tag }}
+                {{ contrato_form.valor_mensalidade }}
+            </div>
+            <div class="col-md-6 mb-2">
+                <label>Valor Total (calculado automaticamente)</label>
+                <input type="text" id="valor_total" class="form-control" readonly>
+            </div>
+            <div class="col-md-6 mb-2">
+                {{ contrato_form.data_assinatura.label_tag }}
+                {{ contrato_form.data_assinatura }}
+            </div>
+            <div class="col-md-6 mb-2">
+                {{ contrato_form.data_vencimento_primeira_parcela.label_tag }}
+                {{ contrato_form.data_vencimento_primeira_parcela }}
+            </div>
+            <div class="col-md-6 mb-2">
+                <label>Data da Última Parcela (calculado automaticamente)</label>
+                <input type="text" id="data_ultima_parcela" class="form-control" readonly>
+            </div>
+            <div class="col-md-12 mb-2">
+                {{ contrato_form.forma_pagamento.label_tag }}
+                <div class="d-flex flex-wrap">
+                    {% for radio in contrato_form.forma_pagamento %}
+                    <div class="form-check me-3">
+                        {{ radio.tag }}
+                        <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-md-12 mb-2">
+                {{ contrato_form.observacoes.label_tag }}
+                {{ contrato_form.observacoes }}
+            </div>
+        </div>
+
+        <!-- Documento -->
+        <h4 class="mt-4">📂 Anexar Documento</h4>
+        <div class="row">
+            <div class="col-md-6 mb-2">
+                {{ documento_form.arquivo.label_tag }}
+                {{ documento_form.arquivo }}
+            </div>
+            <div class="col-md-6 mb-2">
+                {{ documento_form.descricao.label_tag }}
+                {{ documento_form.descricao }}
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary" id="submit-button">Salvar</button>
+            <span id="processing-message" style="display:none; color:green;">Processando... Por favor, aguarde.</span>
+        </div>
+    </form>
+</div>
+
+<!-- JS -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Formset de vídeo
+    let formCount = parseInt($('#id_video-TOTAL_FORMS').val());
+
+    $('#add-video').click(function() {
+        let newForm = $('#empty-video-form').html().replace(/__prefix__/g, formCount);
+        $('#video-forms').append('<div class="card mb-2 p-3 shadow-sm">' + newForm + '</div>');
+        formCount++;
+        $('#id_video-TOTAL_FORMS').val(formCount);
+    });
+
+    // Calcular valor total
+    function calcularTotal() {
+        const mensalidade = parseFloat($('#id_valor_mensalidade').val()) || 0;
+        const vigencia = parseInt($('#id_vigencia_meses').val()) || 0;
+        $('#valor_total').val((mensalidade * vigencia).toFixed(2));
+    }
+
+    $('#id_valor_mensalidade, #id_vigencia_meses').on('input', calcularTotal);
+
+    // Calcular data da última parcela
+    function calcularDataUltimaParcela() {
+        const vigencia = parseInt($('#id_vigencia_meses').val());
+        const dataInicial = new Date($('#id_data_vencimento_primeira_parcela').val());
+        if (!isNaN(dataInicial) && vigencia) {
+            const dataFinal = new Date(dataInicial);
+            dataFinal.setMonth(dataFinal.getMonth() + vigencia - 1);
+            $('#data_ultima_parcela').val(dataFinal.toISOString().split('T')[0]);
+        } else {
+            $('#data_ultima_parcela').val('');
+        }
+    }
+    $('#id_vigencia_meses, #id_data_vencimento_primeira_parcela').on('input change', calcularDataUltimaParcela);
+
+    // Evitar envio duplo
+    $('#novo-contrato-form').on('submit', function() {
+        $('#submit-button').prop('disabled', true).hide();
+        $('#processing-message').show();
+    });
+});
+</script>
+{% endblock %}

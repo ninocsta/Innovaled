@@ -6,3 +6,4 @@ db.sqlite3
 .env.dev
 *.pyc
 /static
+/protected_media

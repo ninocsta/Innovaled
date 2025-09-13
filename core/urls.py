@@ -12,6 +12,13 @@ urlpatterns = [
     path("pendencias/pagamento/", views.pendencias_pagamento, name="pendencias_pagamento"),
 
     # Ações
-    path("contrato/<int:contrato_id>/ativar_video/", views.ativar_video, name="ativar_video"),
+    path("contrato/<int:video_id>/ativar_video/", views.ativar_video, name="ativar_video"),
     path("contrato/<int:contrato_id>/marcar_pagamento/<int:parcela>/", views.marcar_pagamento, name="marcar_pagamento"),
+
+    # Exclusão de documento
+    path("documento/<int:pk>/delete/", views.documento_delete, name="documento_delete"),
+
+    #video novo
+    path("contrato/<int:contrato_id>/video/add/", views.video_create_modal, name="video_create_modal"),
+
 ]

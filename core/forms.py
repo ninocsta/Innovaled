@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Cliente, Contrato, Video, Banco, Vendedor, Local, FormaPagamento
+from .models import Cliente, Contrato, Video, Banco, Vendedor, Local, FormaPagamento, DocumentoContrato
 import re
 
 
@@ -22,13 +22,19 @@ class ClienteForm(forms.ModelForm):
         cpf_cnpj = re.sub(r'\D', '', cpf_cnpj)
         return cpf_cnpj
     
-    def clean_telefones(self):
+    def clean_telefone(self):
+        if not self.cleaned_data.get('telefone'):
+            return ''
         telefone = self.cleaned_data.get('telefone', '')
-        telefone_financeiro = self.cleaned_data.get('telefone_financeiro', '')
         telefone = re.sub(r'\D', '', telefone)
-        telefone_financeiro = re.sub(r'\D', '', telefone_financeiro)
-        return telefone, telefone_financeiro
+        return telefone
     
+    def clean_telefone_financeiro(self):
+        if not self.cleaned_data.get('telefone_financeiro'):
+            return ''
+        telefone_financeiro = self.cleaned_data.get('telefone_financeiro', '')
+        telefone_financeiro = re.sub(r'\D', '', telefone_financeiro)
+        return telefone_financeiro
 
 
 class VideoForm(forms.ModelForm):
@@ -39,6 +45,14 @@ class VideoForm(forms.ModelForm):
             'tempo_video': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 00:03:25'}),
             'local': forms.Select(attrs={'class': 'form-select'}),
         }
+        
+VideoFormSet = inlineformset_factory(
+    Contrato,
+    Video,
+    form=VideoForm,
+    extra=1,           # começa com 1 formulário vazio
+    can_delete=True    # permite remover vídeos
+)
 
 
 class ContratoForm(forms.ModelForm):
@@ -96,3 +110,11 @@ class PagamentoForm(forms.ModelForm):
             "segundo_pagamento": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
         }
 
+class DocumentoContratoForm(forms.ModelForm):
+    class Meta:
+        model = DocumentoContrato
+        fields = ["arquivo", "descricao"]
+        widgets = {
+            "arquivo": forms.FileInput(attrs={"class": "form-control"}),
+            "descricao": forms.TextInput(attrs={"class": "form-control"}),
+        }

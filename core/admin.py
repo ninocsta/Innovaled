@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Contrato, Cliente, Banco, Vendedor, Video, Local, FormaPagamento, StatusContrato, Registro
+from .models import Contrato, Cliente, Banco, Vendedor, Video, Local, FormaPagamento, StatusContrato, Registro, DocumentoContrato
 
 
 class BaseAuditAdmin(admin.ModelAdmin):
@@ -76,3 +76,14 @@ class RegistroAdmin(BaseAuditAdmin):
     list_filter = ("data_hora",)
     search_fields = ("contrato__id_contrato", "observacao")
     readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
+
+@admin.register(DocumentoContrato)
+class DocumentoContratoAdmin(BaseAuditAdmin):
+    list_display = ("id", "contrato", "arquivo", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("contrato__id_contrato",)
+    readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
+    def arquivo_link(self, obj):
+        if obj.arquivo:
+            return f'<a href="{obj.arquivo.url}" target="_blank">Download</a>'
+        return "-"

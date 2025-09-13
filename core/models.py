@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 import datetime
+import os
 
 
 class BaseAudit(models.Model):
@@ -61,14 +62,7 @@ class Local(BaseAudit):
         return self.nome
 
 
-class Video(BaseAudit):
-    tempo_video = models.DurationField(default=10)  
-    local = models.ForeignKey(Local, on_delete=models.CASCADE)
-    status = models.BooleanField(default=False)
-    data_subiu = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Vídeo {self.id} - {self.tempo_video}"
 
 
 class FormaPagamento(BaseAudit):
@@ -85,6 +79,14 @@ class StatusContrato(BaseAudit):
         return self.nome_status
 
 
+def contrato_upload_path(instance, filename):
+    # organiza uploads por contrato e tipo de documento
+    return os.path.join(
+        "contratos",
+        f"contrato_{instance.contrato.id_contrato}",
+        filename
+    )
+
 class Contrato(BaseAudit):
     id_contrato = models.AutoField(primary_key=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name="contratos")
@@ -98,7 +100,6 @@ class Contrato(BaseAudit):
     vendedor = models.ForeignKey(Vendedor, on_delete=models.SET_NULL, null=True, blank=True)
     vigencia_meses = models.IntegerField(default=12)
 
-    video = models.ForeignKey(Video, on_delete=models.SET_NULL, null=True, blank=True)
 
     valor_mensalidade = models.DecimalField(max_digits=10, decimal_places=2)
     valor_total = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
@@ -116,9 +117,22 @@ class Contrato(BaseAudit):
 
     def __str__(self):
         return f"Contrato {self.id_contrato:05d} - {self.cliente.razao_social}"
-    
+
     class Meta:
-        ordering = ['-data_assinatura']
+        ordering = ["-data_assinatura"]
+
+
+class DocumentoContrato(BaseAudit):
+    contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name="documentos")
+    arquivo = models.FileField(upload_to=contrato_upload_path)
+    descricao = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.contrato} - {self.descricao or self.arquivo.name}"
+
+    class Meta:
+        verbose_name = "Documento do Contrato"
+        verbose_name_plural = "Documentos do Contrato"
 
 
 class Registro(BaseAudit):
@@ -128,3 +142,14 @@ class Registro(BaseAudit):
 
     def __str__(self):
         return f"Registro {self.id:05d} - {self.contrato}"
+    
+
+class Video(BaseAudit):
+    contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name="videos")
+    tempo_video = models.DurationField(default=10)  
+    local = models.ForeignKey(Local, on_delete=models.CASCADE)
+    status = models.BooleanField(default=False)
+    data_subiu = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Vídeo {self.id} - {self.tempo_video}"
