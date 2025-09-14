@@ -90,6 +90,7 @@ def contrato_list(request):
 @login_required
 def contrato_create(request):
     cliente_existente = None
+    data_ultima_parcela = None
 
     if request.method == "POST":
         cliente_form = ClienteForm(request.POST)
@@ -97,13 +98,22 @@ def contrato_create(request):
         documento_form = DocumentoContratoForm(request.POST, request.FILES)
         video_formset = VideoFormSet(request.POST, prefix='video')
 
-        if cliente_form.is_valid() and contrato_form.is_valid() and documento_form.is_valid() and video_formset.is_valid():
-            # Verificar se o cliente já existe
+        if (
+            cliente_form.is_valid()
+            and contrato_form.is_valid()
+            and documento_form.is_valid()
+            and video_formset.is_valid()
+        ):
+            # 🔎 Verifica se já existe cliente com o mesmo CPF/CNPJ
             cpf_cnpj = cliente_form.cleaned_data.get("cpf_cnpj")
-            cliente_existente = Cliente.objects.filter(cpf_cnpj=cpf_cnpj).first()
+            cliente = Cliente.objects.filter(cpf_cnpj=cpf_cnpj).first()
 
-            if cliente_existente:
-                cliente = cliente_existente
+            if cliente:
+                cliente_existente = cliente
+                messages.info(
+                    request,
+                    f"⚠ Cliente {cliente.razao_social} ({cliente.cpf_cnpj}) já existe e será reutilizado.",
+                )
             else:
                 cliente = cliente_form.save(commit=False)
                 cliente.created_by = request.user
@@ -115,16 +125,17 @@ def contrato_create(request):
             contrato.cliente = cliente
             contrato.created_by = request.user
             contrato.updated_by = request.user
-            contrato.valor_total = contrato.valor_mensalidade * contrato.vigencia_meses
+
 
             if contrato.data_vencimento_primeira_parcela:
-                contrato.data_ultima_parcela = contrato.data_vencimento_primeira_parcela + relativedelta(
-                    months=contrato.vigencia_meses - 1
+                contrato.data_ultima_parcela = (
+                    contrato.data_vencimento_primeira_parcela
+                    + relativedelta(months=contrato.vigencia_meses - 1)
                 )
 
             status_ativo, _ = StatusContrato.objects.get_or_create(
                 nome_status="Ativo",
-                defaults={'created_by': request.user, 'updated_by': request.user}
+                defaults={"created_by": request.user, "updated_by": request.user},
             )
             contrato.status = status_ativo
             contrato.save()
@@ -137,7 +148,7 @@ def contrato_create(request):
                 video.created_by = request.user
                 video.updated_by = request.user
                 video.save()
-            video_formset.save()  # Processa deletes também
+            video_formset.save()  # processa deletes
 
             # Salvar documento
             if documento_form.cleaned_data.get("arquivo"):
@@ -147,15 +158,33 @@ def contrato_create(request):
                 documento.updated_by = request.user
                 documento.save()
 
-            messages.success(request, "Contrato criado com sucesso!")
+            messages.success(request, "✅ Contrato criado com sucesso!")
             return redirect("contrato_detail", pk=contrato.pk)
 
         else:
-            # Adicionar mensagens de erro para o usuário
+            # ⚡ Mantém os valores calculados mesmo em caso de erro
+            try:
+                vigencia = int(request.POST.get("vigencia_meses", 0))
+                mensalidade = float(request.POST.get("valor_mensalidade", 0))     
+            except (ValueError, TypeError):
+                vigencia = 0
+                
+
+            try:
+                data_inicial = request.POST.get("data_vencimento_primeira_parcela")
+                if data_inicial and vigencia:
+                    data_inicial = datetime.strptime(data_inicial, "%Y-%m-%d").date()
+                    data_ultima_parcela = data_inicial + relativedelta(
+                        months=vigencia - 1
+                    )
+            except Exception:
+                data_ultima_parcela = None
+
+            # Mensagens de erro detalhadas
             for form_name, form in [
                 ("Cliente", cliente_form),
                 ("Contrato", contrato_form),
-                ("Documento", documento_form)
+                ("Documento", documento_form),
             ]:
                 for field, errors in form.errors.items():
                     for error in errors:
@@ -164,11 +193,15 @@ def contrato_create(request):
             for i, form in enumerate(video_formset.forms):
                 for field, errors in form.errors.items():
                     for error in errors:
-                        messages.error(request, f"Vídeo #{i+1} - {field}: {error}")
+                        messages.error(
+                            request, f"Vídeo #{i+1} - {field}: {error}"
+                        )
 
     else:
         cliente_form = ClienteForm()
-        contrato_form = ContratoForm(initial={'data_assinatura': timezone.now().date()})
+        contrato_form = ContratoForm(
+            initial={"data_assinatura": timezone.now().date()}
+        )
         documento_form = DocumentoContratoForm()
         video_formset = VideoFormSet(prefix='video')
 
@@ -181,8 +214,10 @@ def contrato_create(request):
             "documento_form": documento_form,
             "video_formset": video_formset,
             "cliente_existente": cliente_existente,
+            "data_ultima_parcela": data_ultima_parcela,
         },
     )
+
 
 @login_required
 def contrato_detail(request, pk):
@@ -194,6 +229,10 @@ def contrato_detail(request, pk):
     # Preparar vídeos pendentes e ativos
     videos_pendentes = videos.filter(status=False)
     videos_ativos = videos.filter(status=True)
+
+    # Flags para pendências
+    tem_video_pendente = videos_pendentes.exists()
+    tem_pagamento_pendente = not contrato.primeiro_pagamento or not contrato.segundo_pagamento
 
     if request.method == "POST":
         form = DocumentoContratoForm(request.POST, request.FILES)
@@ -213,6 +252,8 @@ def contrato_detail(request, pk):
         "videos": videos,
         "videos_pendentes": videos_pendentes,
         "videos_ativos": videos_ativos,
+        "tem_video_pendente": tem_video_pendente,
+        "tem_pagamento_pendente": tem_pagamento_pendente,
         "locais": locais,
     })
 
@@ -220,10 +261,16 @@ def contrato_detail(request, pk):
 
 @login_required
 def pendencias_video(request):
-    # Filtra contratos que têm pelo menos um vídeo com status=False
-    contratos = Contrato.objects.annotate(
-        videos_pendentes=Count('videos', filter=Q(videos__status=False))
-    ).filter(videos_pendentes__gt=0).select_related("cliente")
+    # Filtra contratos que têm pelo menos um vídeo OFF
+    # e que já possuem primeiro_pagamento
+    contratos = (
+        Contrato.objects.annotate(
+            videos_pendentes=Count("videos", filter=Q(videos__status=False))
+        )
+        .filter(videos_pendentes__gt=0, primeiro_pagamento__isnull=False)
+        .select_related("cliente")
+        .prefetch_related("videos")  # otimiza query dos vídeos
+    )
 
     return render(request, "pendencias/pendencias_video.html", {"contratos": contratos})
 
@@ -331,3 +378,34 @@ def video_create_modal(request, contrato_id):
             messages.error(request, "❌ Preencha todos os campos corretamente.")
 
     return redirect("contrato_detail", pk=contrato.pk)
+
+
+@login_required
+def contratos_vencendo(request):
+    hoje = timezone.now().date()
+    # Pega contratos que têm data de vencimento e ainda não foram cancelados
+    contratos = (
+        Contrato.objects.filter(
+            data_vencimento_contrato__isnull=False,
+            data_cancelamento_contrato__isnull=True,
+        )
+        .order_by("data_vencimento_contrato")
+    )
+    return render(request, "contratos/contratos_vencendo.html", {"contratos": contratos, "hoje": hoje})
+
+
+@login_required
+def renovar_contrato(request, pk):
+    contrato = get_object_or_404(Contrato, pk=pk)
+
+    if contrato.data_vencimento_contrato:
+        contrato.data_vencimento_contrato += relativedelta(months=1)
+        contrato.save()
+        messages.success(
+            request,
+            f"📅 Contrato #{contrato.id_contrato} renovado por mais 30 dias (novo vencimento: {contrato.data_vencimento_contrato.strftime('%d/%m/%Y')}).",
+        )
+    else:
+        messages.warning(request, f"⚠ O contrato #{contrato.id_contrato} não possui data de vencimento definida.")
+
+    return redirect("contratos_vencendo")

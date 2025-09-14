@@ -2,6 +2,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from .models import Cliente, Contrato, Video, Banco, Vendedor, Local, FormaPagamento, DocumentoContrato
 import re
+import unicodedata
 
 
 class ClienteForm(forms.ModelForm):
@@ -16,26 +17,6 @@ class ClienteForm(forms.ModelForm):
             'telefone_financeiro': forms.TextInput(attrs={'class': 'form-control'}),
             'email_financeiro': forms.EmailInput(attrs={'class': 'form-control'}),
         }
-    
-    def clean_cpf_cnpj(self):
-        cpf_cnpj = self.cleaned_data['cpf_cnpj']
-        cpf_cnpj = re.sub(r'\D', '', cpf_cnpj)
-        return cpf_cnpj
-    
-    def clean_telefone(self):
-        if not self.cleaned_data.get('telefone'):
-            return ''
-        telefone = self.cleaned_data.get('telefone', '')
-        telefone = re.sub(r'\D', '', telefone)
-        return telefone
-    
-    def clean_telefone_financeiro(self):
-        if not self.cleaned_data.get('telefone_financeiro'):
-            return ''
-        telefone_financeiro = self.cleaned_data.get('telefone_financeiro', '')
-        telefone_financeiro = re.sub(r'\D', '', telefone_financeiro)
-        return telefone_financeiro
-
 
 class VideoForm(forms.ModelForm):
     class Meta:
@@ -45,6 +26,12 @@ class VideoForm(forms.ModelForm):
             'tempo_video': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 00:03:25'}),
             'local': forms.Select(attrs={'class': 'form-select'}),
         }
+        error_messages = {
+            'local': {
+                'required': 'Campo obrigatório.',
+            },
+        }
+
         
 VideoFormSet = inlineformset_factory(
     Contrato,
@@ -80,7 +67,6 @@ class ContratoForm(forms.ModelForm):
         widgets = {
             'vigencia_meses': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
             'valor_mensalidade': forms.NumberInput(attrs={'class': 'form-control'}),
-            'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'readonly': True}),
             'primeiro_pagamento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'segundo_pagamento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'data_assinatura': forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'}),
@@ -91,7 +77,6 @@ class ContratoForm(forms.ModelForm):
         labels = {
             'vigencia_meses': 'Vigência (em meses)',
             'valor_mensalidade': 'Valor da Mensalidade',
-            'valor_total': 'Valor Total (calculado automaticamente)',
             'primeiro_pagamento': 'Primeiro Pagamento',
             'segundo_pagamento': 'Segundo Pagamento',
             'data_assinatura': 'Data da Assinatura',

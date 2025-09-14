@@ -27,15 +27,16 @@
     <div class="col-md-2">
         <input type="date" name="data_fim" value="{{ query_data_fim }}" class="form-control">
     </div>
-    <div class="col-md-1 d-grid">
-        <button type="submit" class="btn btn-primary">Filtrar</button>
-    </div>
-
-    <div class="col-md-2 mt-2">
+    <div class="w-100"></div>
+    <div class="col-md-10"></div>
+    <div class="col-md-1 align-self-end">
         <select name="itens" class="form-select" onchange="this.form.submit()">
-            <option value="10" {% if itens_por_pagina == 10 %}selected{% endif %}>10 por página</option>
-            <option value="25" {% if itens_por_pagina == 25 %}selected{% endif %}>25 por página</option>
-            <option value="50" {% if itens_por_pagina == 50 %}selected{% endif %}>50 por página</option>
+            <option value="10" {% if itens_por_pagina == 10 %}selected{% endif %}>10</option>
+            <option value="25" {% if itens_por_pagina == 25 %}selected{% endif %}>25</option>
+            <option value="50" {% if itens_por_pagina == 50 %}selected{% endif %}>50</option>
         </select>
+    </div>
+        <div class="col-md-1 d-grid align-self-end">
+        <button type="submit" class="btn btn-light">Filtrar</button>
     </div>
 </form>

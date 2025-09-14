@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 import datetime
 import os
+import re
+import unicodedata
 
 
 class BaseAudit(models.Model):
@@ -27,11 +29,29 @@ class BaseAudit(models.Model):
 
 class Cliente(BaseAudit):
     razao_social = models.CharField(max_length=255)
-    cpf_cnpj = models.CharField(max_length=20, unique=True)
+    cpf_cnpj = models.CharField(max_length=20)
     email = models.EmailField()
     telefone = models.CharField(max_length=20, blank=True, null=True)
     telefone_financeiro = models.CharField(max_length=20, blank=True, null=True)
     email_financeiro = models.EmailField(blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        # Normalizar razão social (sem acentos e maiúscula)
+        if self.razao_social:
+            self.razao_social = unicodedata.normalize("NFKD", self.razao_social).encode("ASCII", "ignore").decode("utf-8")
+            self.razao_social = self.razao_social.upper().strip()
+
+        # Remover caracteres não numéricos dos campos de números
+        if self.cpf_cnpj:
+            self.cpf_cnpj = re.sub(r"\D", "", self.cpf_cnpj)
+
+        if self.telefone:
+            self.telefone = re.sub(r"\D", "", self.telefone)
+
+        if self.telefone_financeiro:
+            self.telefone_financeiro = re.sub(r"\D", "", self.telefone_financeiro)
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.razao_social} ({self.cpf_cnpj})"
@@ -102,7 +122,7 @@ class Contrato(BaseAudit):
 
 
     valor_mensalidade = models.DecimalField(max_digits=10, decimal_places=2)
-    valor_total = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+
 
     data_assinatura = models.DateField(default=datetime.date.today)
     data_vencimento_contrato = models.DateField(blank=True, null=True)
@@ -118,8 +138,16 @@ class Contrato(BaseAudit):
     def __str__(self):
         return f"Contrato {self.id_contrato:05d} - {self.cliente.razao_social}"
 
+    @property
+    def valor_total(self):
+        """Calcula dinamicamente o valor total do contrato"""
+        if self.valor_mensalidade and self.vigencia_meses:
+            return self.valor_mensalidade * self.vigencia_meses
+        return 0
+    
+
     class Meta:
-        ordering = ["-data_assinatura"]
+        ordering = ["-data_assinatura", "-id_contrato"]
 
 
 class DocumentoContrato(BaseAudit):
@@ -130,10 +158,15 @@ class DocumentoContrato(BaseAudit):
     def __str__(self):
         return f"{self.contrato} - {self.descricao or self.arquivo.name}"
 
+    def delete(self, *args, **kwargs):
+        # Excluir o arquivo do storage antes de remover o registro
+        if self.arquivo and self.arquivo.storage.exists(self.arquivo.name):
+            self.arquivo.delete(save=False)
+        super().delete(*args, **kwargs)
+
     class Meta:
         verbose_name = "Documento do Contrato"
         verbose_name_plural = "Documentos do Contrato"
-
 
 class Registro(BaseAudit):
     contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE)

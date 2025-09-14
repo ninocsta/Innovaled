@@ -6,6 +6,8 @@ urlpatterns = [
     path("contratos/", views.contrato_list, name="contratos_list"),
     path("contrato/<int:pk>/", views.contrato_detail, name="contrato_detail"),
     path("", views.contrato_list, name="home"),
+    path("contratos/vencimentos/", views.contratos_vencendo, name="contratos_vencendo"),
+    path("contratos/<int:pk>/renovar/", views.renovar_contrato, name="renovar_contrato"),
 
     # Pendências globais
     path("pendencias/video/", views.pendencias_video, name="pendencias_video"),

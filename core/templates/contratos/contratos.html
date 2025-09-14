@@ -6,17 +6,20 @@
 <div class="container mt-4">
     <h1 class="mb-4 text-center">📑 Lista de Contratos</h1>
 
-    <!-- Filtros e Botões -->
-    <div class="d-flex justify-content-between align-items-center mb-4 gap-2">
+    <!-- Container -->
+    <div class="mb-4">
         <!-- Filtros -->
-        {% include "partials/filtros_contratos.html" %}
+        <div class="mb-3">
+            {% include "partials/filtros_contratos.html" %}
+        </div>
 
         <!-- Botões -->
-        <div class="gap-2 d-flex">
-            <a href="{% url 'contrato_create' %}" class="btn btn-primary me-2">Novo Contrato</a>            
-            <button class="btn btn-secondary" disabled>Gerar Relatório</button>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'contrato_create' %}" class="btn btn-light">Novo Contrato</a>
+            <button class="btn btn-light" disabled>Gerar Relatório</button>
         </div>
     </div>
+
 
     <!-- Tabela de Contratos -->
     <div class="table-responsive">
@@ -37,18 +40,34 @@
             <tbody>
                 {% for contrato in page_obj %}
                 <tr>
-                    <td>{{ contrato.id_contrato }} <a href="{% url 'contrato_detail' contrato.pk %}"><i class="bi bi-search text-light me-2"></i></a></td>
+                    <td>{{ contrato.id_contrato|stringformat:"05d" }} <a
+                            href="{% url 'contrato_detail' contrato.pk %}"><i
+                                class="bi bi-search text-light me-2"></i></a></td>
                     <td>{{ contrato.cliente.razao_social }}</td>
                     <td>{{ contrato.cliente.cpf_cnpj }}</td>
                     <td>{{ contrato.vendedor.nome }}</td>
-                    <td>{{ contrato.video.local.nome }}</td>
                     <td>
-                        {% if contrato.video and contrato.video.status %}
-                            <span class="badge bg-success">ON</span>
+                        {% for local in contrato.videos.all %}
+                        {% if local.local %}
+                        {{ local.local.nome }}
+                        {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for video in contrato.videos.all %}
+                        {% if video.status %}
+                        <span class="badge bg-success">ON</span>
                         {% else %}
-                            <span class="badge bg-danger">OFF</span>
+                        <span class="badge bg-danger">OFF</span>
+                        {% endif %}
+                        {% empty %}
+                        <span class="text-muted">Sem vídeo</span>
+                        {% endfor %}
+                        {% if not contrato.videos.exists %}
+                        <span class="text-muted">Sem vídeo</span>
                         {% endif %}
                     </td>
+
                     <td>{{ contrato.data_assinatura|date:"d/m/Y" }}</td>
                     <td>R$ {{ contrato.valor_total }}</td>
                     <td>{{ contrato.status.nome_status }}</td>

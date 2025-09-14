@@ -15,7 +15,7 @@ class BaseAuditAdmin(admin.ModelAdmin):
 
 @admin.register(Contrato)
 class ContratoAdmin(BaseAuditAdmin):
-    list_display = ("id_formatado", "cliente", "valor_mensalidade", "valor_total", "status", "data_assinatura")
+    list_display = ("id_formatado", "cliente", "valor_mensalidade", "status", "data_assinatura")
     list_filter = ("status", "forma_pagamento", "banco", "vendedor", "data_assinatura")
     search_fields = ("cliente__razao_social", "cliente__cpf_cnpj")
     ordering = ("-data_assinatura",)

@@ -12,12 +12,13 @@
         </h2>
         <span class="badge bg-info fs-6">{{ contrato.status.nome_status }}</span>
     </div>
-    {% if contrato.primeiro_pagamento and video and not video.status %}
-    <div class="alert alert-danger shadow mb-4" role="alert">
+
+    {% if contrato.primeiro_pagamento and tem_video_pendente %}
+    <div class="alert alert-warning shadow mb-4" role="alert">
         ⚠️ Este contrato possui <strong>pendência de vídeo</strong>.
-        O vídeo ainda não foi ativado após o primeiro pagamento.
+        Algum vídeo ainda não foi ativado após o primeiro pagamento.
     </div>
-    {% elif not contrato.primeiro_pagamento or not contrato.segundo_pagamento %}
+    {% elif tem_pagamento_pendente %}
     <div class="alert alert-warning shadow mb-4" role="alert">
         ⚠️ Este contrato possui <strong>pendência de pagamento</strong>.
         Verifique as parcelas em aberto.
@@ -27,6 +28,8 @@
         ✔ Este contrato está <strong>regularizado</strong>, sem pendências.
     </div>
     {% endif %}
+
+
 
     <!-- Exibir mensagens de erro ou sucesso -->
     {% if messages %}
@@ -63,7 +66,8 @@
                     <p><strong>Data Assinatura:</strong> {{ contrato.data_assinatura }}</p>
                     <p><strong>Vigência:</strong> {{ contrato.vigencia_meses }} meses</p>
                     <p><strong>Vencimento:</strong> {{ contrato.data_vencimento_contrato|default:"-" }}</p>
-                    <p><strong>Última Parcela:</strong> {{ contrato.data_ultima_parcela|default:"-" }}</p>
+                    <p><strong>Vencimento Primeiro Pagamento:</strong> {{                        contrato.data_vencimento_primeira_parcela|default:"-" }}</p>
+
                 </div>
                 <div class="col-md-6">
                     <p><strong>Valor Mensalidade:</strong> R$ {{ contrato.valor_mensalidade }}</p>
@@ -76,17 +80,17 @@
         </div>
     </div>
 
-<!-- 🎬 Vídeos vinculados -->
-<div class="card bg-dark text-light mb-4 shadow">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">🎬 Vídeos Vinculados</h5>
-        <!-- Botão que abre o modal -->
-        <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addVideoModal">
-            <i class="bi bi-plus-circle"></i> Adicionar Vídeo
-        </button>
-    </div>
-    <div class="card-body">
-        {% if videos %}
+    <!-- 🎬 Vídeos vinculados -->
+    <div class="card bg-dark text-light mb-4 shadow">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">🎬 Vídeos Vinculados</h5>
+            <!-- Botão que abre o modal -->
+            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addVideoModal">
+                <i class="bi bi-plus-circle"></i> Adicionar Vídeo
+            </button>
+        </div>
+        <div class="card-body">
+            {% if videos %}
             <div class="row">
                 {% for video in videos %}
                 <div class="col-md-6 col-lg-4 mb-3">
@@ -97,9 +101,9 @@
                             <p><strong>Local:</strong> {{ video.local }}</p>
                             <p><strong>Status:</strong>
                                 {% if video.status %}
-                                    <span class="badge bg-success">Ativo</span>
+                                <span class="badge bg-success">Ativo</span>
                                 {% else %}
-                                    <span class="badge bg-secondary">Inativo</span>
+                                <span class="badge bg-secondary">Inativo</span>
                                 {% endif %}
                             </p>
                             <p><strong>Data Upload:</strong> {{ video.data_subiu }}</p>
@@ -108,115 +112,119 @@
                 </div>
                 {% endfor %}
             </div>
-        {% else %}
+            {% else %}
             <p class="text-muted">Nenhum vídeo vinculado.</p>
-        {% endif %}
-    </div>
-</div>
-
-<!-- 🔹 Modal para adicionar vídeo -->
-<div class="modal fade" id="addVideoModal" tabindex="-1" aria-labelledby="addVideoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content bg-dark text-light">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addVideoModalLabel">Adicionar Vídeo</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <form method="POST" action="{% url 'video_create_modal' contrato.pk %}">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="tempo_video" class="form-label">Tempo (segundos)</label>
-                        <input type="number" class="form-control" name="tempo_video" id="tempo_video" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="local" class="form-label">Local</label>
-                        <select name="local" id="local" class="form-select" required>
-                            {% for local in locais %}
-                                <option value="{{ local.id }}">{{ local }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success">Salvar</button>
-                </div>
-            </form>
+            {% endif %}
         </div>
     </div>
-</div>
 
-<!-- Pendências -->
-<div class="card bg-dark text-light mb-4 shadow">
-    <div class="card-header">
-        <h5 class="mb-0">⚠️ Pendências</h5>
-    </div>
-    <div class="card-body">
-        <!-- Pendências de Pagamento -->
-        <h5 class="card-title">💰 Pendências de Pagamento</h5>
-
-        <p>
-            <strong>Primeiro pagamento:</strong>
-            {% if contrato.primeiro_pagamento %}
-                ✅ Pago em {{ contrato.primeiro_pagamento }}
-            {% else %}
-                <span class="text-danger">🚨 Pendente</span>
-                <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 1 %}" class="d-flex mt-2">
+    <!-- 🔹 Modal para adicionar vídeo -->
+    <div class="modal fade" id="addVideoModal" tabindex="-1" aria-labelledby="addVideoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addVideoModalLabel">Adicionar Vídeo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Fechar"></button>
+                </div>
+                <form method="POST" action="{% url 'video_create_modal' contrato.pk %}">
                     {% csrf_token %}
-                    <input type="hidden" name="from_detail" value="1">
-                    <input type="date" name="data_pagamento" class="form-control form-control-sm me-2">
-                    <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="tempo_video" class="form-label">Tempo (segundos)</label>
+                            <input type="number" class="form-control" name="tempo_video" id="tempo_video" value="10"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="local" class="form-label">Local</label>
+                            <select name="local" id="local" class="form-select" required>
+                                {% for local in locais %}
+                                <option value="{{ local.id }}">{{ local }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">Salvar</button>
+                    </div>
                 </form>
-            {% endif %}
-        </p>
-
-        <p>
-            <strong>Segundo pagamento:</strong>
-            {% if contrato.segundo_pagamento %}
-                ✅ Pago em {{ contrato.segundo_pagamento }}
-            {% else %}
-                <span class="text-danger">🚨 Pendente</span>
-                <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 2 %}" class="d-flex mt-2">
-                    {% csrf_token %}
-                    <input type="hidden" name="from_detail" value="1">
-                    <input type="date" name="data_pagamento" class="form-control form-control-sm me-2">
-                    <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
-                </form>
-            {% endif %}
-        </p>
+            </div>
+        </div>
     </div>
 
-   <!-- Pendências de Vídeo -->
-<div class="card-body mt-3">
-    <h5 class="card-title">📺 Pendências de Vídeo</h5>
-    
-    {% if contrato.primeiro_pagamento %}
-        {% if videos_pendentes.exists %}
-            <p class="text-danger">🚨 {{ videos_pendentes.count }} vídeo(s) OFF</p>
-            <ul>
-                {% for video in videos_pendentes %}
-                    <li class="mb-2">
-                        ID {{ video.id }} - Local: {{ video.local }} - Tempo: {{ video.tempo_video }}
-                        <form method="post" action="{% url 'ativar_video' video.id %}" class="d-inline ms-2">
-                            {% csrf_token %}
-                            <input type="date" name="data_subiu" class="form-control form-control-sm d-inline-block w-auto" placeholder="Data Upload">
-                            <input type="hidden" name="from_detail" value="1">
-                            <button type="submit" class="btn btn-success btn-sm">✅ Ativar</button>
-                        </form>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="text-success">✅ Todos os vídeos ativos</p>
-        {% endif %}
-    {% else %}
-        <p class="text-secondary">Sem pendência de vídeo (aguardando pagamento)</p>
-    {% endif %}
-</div>
-
-
-
+    <!-- Pendências -->
+    <div class="card bg-dark text-light mb-4 shadow">
+        <div class="card-header">
+            <h5 class="mb-0">⚠️ Pendências</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Pendências de Pagamento -->
+                <div class="col-md-6 border-end">
+                    <h5 class="card-title">💰 Pendências de Pagamento</h5>
+                    <p>
+                        <strong>Primeiro pagamento:</strong>
+                        {% if contrato.primeiro_pagamento %}
+                        ✅ Pago em {{ contrato.primeiro_pagamento }}
+                        {% else %}
+                        <span class="text-danger">🚨 Pendente</span>
+                    <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 1 %}"
+                        class="d-flex mt-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="from_detail" value="1">
+                        <input type="date" name="data_pagamento" class="form-control form-control-sm me-2">
+                        <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
+                    </form>
+                    {% endif %}
+                    </p>
+                    <p>
+                        <strong>Segundo pagamento:</strong>
+                        {% if contrato.segundo_pagamento %}
+                        ✅ Pago em {{ contrato.segundo_pagamento }}
+                        {% else %}
+                        <span class="text-danger">🚨 Pendente</span>
+                    <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 2 %}"
+                        class="d-flex mt-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="from_detail" value="1">
+                        <input type="date" name="data_pagamento" class="form-control form-control-sm me-2">
+                        <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
+                    </form>
+                    {% endif %}
+                    </p>
+                </div>
+                <!-- Pendências de Vídeo -->
+                <div class="col-md-6">
+                    <h5 class="card-title">📺 Pendências de Vídeo</h5>
+                    {% if contrato.primeiro_pagamento %}
+                    {% if videos_pendentes.exists %}
+                    <p class="text-danger">🚨 {{ videos_pendentes.count }} vídeo(s) OFF</p>
+                    <ul>
+                        {% for video in videos_pendentes %}
+                        <li class="mb-2">
+                            ID {{ video.id }} - Local: {{ video.local }} - Tempo: {{ video.tempo_video }}
+                            <form method="post" action="{% url 'ativar_video' video.id %}" class="d-inline ms-2">
+                                {% csrf_token %}
+                                <input type="date" name="data_subiu"
+                                    class="form-control form-control-sm d-inline-block w-auto"
+                                    placeholder="Data Upload">
+                                <input type="hidden" name="from_detail" value="1">
+                                <button type="submit" class="btn btn-success btn-sm">✅ Ativar</button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-success">✅ Todos os vídeos ativos</p>
+                    {% endif %}
+                    {% else %}
+                    <p class="text-secondary">Sem pendência de vídeo (aguardando pagamento)</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Registros vinculados -->
     <div class="card bg-dark text-light mb-4 shadow">
@@ -308,4 +316,13 @@
     </div>
 
 </div>
+
+<script>
+    document.addEventListener('hidden.bs.modal', function (event) {
+    // Remove the focus from the active element
+    if (document.activeElement) {
+    document.activeElement.blur();
+    }
+});
+</script>
 {% endblock %}

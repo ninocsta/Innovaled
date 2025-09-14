@@ -15,6 +15,7 @@
                 <div class="card-body">
                     <p><strong>Cliente:</strong> {{ contrato.cliente.razao_social }}</p>
                     <p><strong>Vídeos Pendentes:</strong></p>
+
                     <ul class="list-group list-group-flush">
                         {% for video in contrato.videos.all %}
                         {% if not video.status %}
@@ -25,41 +26,56 @@
                             <button class="btn btn-success btn-sm" data-bs-toggle="modal"
                                 data-bs-target="#ativarVideoModal{{ video.id }}">✅ Ativar</button>
                         </li>
-
-                        <!-- Modal de ativar vídeo -->
-                        <div class="modal fade" id="ativarVideoModal{{ video.id }}" tabindex="-1" aria-hidden="true">
-                          <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content bg-dark text-light">
-                              <div class="modal-header">
-                                <h5 class="modal-title">Ativar Vídeo ID {{ video.id }}</h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                                    aria-label="Fechar"></button>
-                              </div>
-                              <form method="post" action="{% url 'ativar_video' video.id %}">
-                                  {% csrf_token %}
-                                  <div class="modal-body">
-                                      <label for="data_subiu_{{ video.id }}">Data do upload (opcional)</label>
-                                      <input type="date" name="data_subiu" id="data_subiu_{{ video.id }}"
-                                          class="form-control">
-                                  </div>
-                                  <div class="modal-footer">
-                                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                      <button type="submit" class="btn btn-success">Ativar</button>
-                                  </div>
-                              </form>
-                            </div>
-                          </div>
-                        </div>
                         {% endif %}
                         {% endfor %}
                     </ul>
+
                 </div>
             </div>
         </div>
+
+        <!-- Renderiza os modais FORA da UL -->
+        {% for video in contrato.videos.all %}
+        {% if not video.status %}
+        <div class="modal fade" id="ativarVideoModal{{ video.id }}" tabindex="-1"
+             aria-labelledby="modalLabel{{ video.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-dark text-light">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalLabel{{ video.id }}">Ativar Vídeo ID {{ video.id }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Fechar"></button>
+                    </div>
+                    <form method="post" action="{% url 'ativar_video' video.id %}">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <label for="data_subiu_{{ video.id }}">Data do upload (opcional)</label>
+                            <input type="date" name="data_subiu" id="data_subiu_{{ video.id }}"
+                                   class="form-control">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success">Ativar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+
         {% endfor %}
     </div>
     {% else %}
     <div class="alert alert-success">🎉 Não há pendências de vídeo.</div>
     {% endif %}
 </div>
+<script>
+    document.addEventListener('hidden.bs.modal', function (event) {
+    // Remove the focus from the active element
+    if (document.activeElement) {
+    document.activeElement.blur();
+    }
+});
+</script>
 {% endblock %}

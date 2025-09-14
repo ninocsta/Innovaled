@@ -18,12 +18,12 @@ Usina - Novo Contrato
 
     <!-- Mensagens de erro/sucesso -->
     {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-        </div>
-        {% endfor %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+    {% endfor %}
     {% endif %}
 
     <form method="POST" enctype="multipart/form-data" id="novo-contrato-form">
@@ -36,63 +36,65 @@ Usina - Novo Contrato
                 {{ cliente_form.razao_social.label_tag }}
                 {{ cliente_form.razao_social }}
                 {% if cliente_form.razao_social.errors %}
-                    <div class="invalid-feedback">{{ cliente_form.razao_social.errors }}</div>
+                <div class="invalid-feedback">{{ cliente_form.razao_social.errors }}</div>
                 {% endif %}
             </div>
             <div class="col-md-6 mb-2">
                 {{ cliente_form.cpf_cnpj.label_tag }}
                 {{ cliente_form.cpf_cnpj }}
                 {% if cliente_form.cpf_cnpj.errors %}
-                    <div class="invalid-feedback">{{ cliente_form.cpf_cnpj.errors }}</div>
+                <div class="invalid-feedback">{{ cliente_form.cpf_cnpj.errors }}</div>
                 {% elif cliente_existente %}
-                    <div class="text-success">✔ Cliente já existe e será reutilizado.</div>
+                <div class="text-success">✔ Cliente já existe e será reutilizado.</div>
                 {% endif %}
             </div>
             <div class="col-md-6 mb-2">
                 {{ cliente_form.email.label_tag }}
                 {{ cliente_form.email }}
                 {% if cliente_form.email.errors %}
-                    <div class="invalid-feedback">{{ cliente_form.email.errors }}</div>
+                <div class="invalid-feedback">{{ cliente_form.email.errors }}</div>
                 {% endif %}
             </div>
             <div class="col-md-6 mb-2">
                 {{ cliente_form.telefone.label_tag }} <small class="text-muted">(opcional)</small>
                 {{ cliente_form.telefone }}
                 {% if cliente_form.telefone.errors %}
-                    <div class="invalid-feedback">{{ cliente_form.telefone.errors }}</div>
+                <div class="invalid-feedback">{{ cliente_form.telefone.errors }}</div>
                 {% endif %}
             </div>
             <div class="col-md-6 mb-2">
                 {{ cliente_form.telefone_financeiro.label_tag }} <small class="text-muted">(opcional)</small>
                 {{ cliente_form.telefone_financeiro }}
                 {% if cliente_form.telefone_financeiro.errors %}
-                    <div class="invalid-feedback">{{ cliente_form.telefone_financeiro.errors }}</div>
+                <div class="invalid-feedback">{{ cliente_form.telefone_financeiro.errors }}</div>
                 {% endif %}
             </div>
             <div class="col-md-6 mb-2">
                 {{ cliente_form.email_financeiro.label_tag }} <small class="text-muted">(opcional)</small>
                 {{ cliente_form.email_financeiro }}
                 {% if cliente_form.email_financeiro.errors %}
-                    <div class="invalid-feedback">{{ cliente_form.email_financeiro.errors }}</div>
+                <div class="invalid-feedback">{{ cliente_form.email_financeiro.errors }}</div>
                 {% endif %}
             </div>
         </div>
 
         <!-- Seção de Vídeos -->
         <h4 class="mt-4">🎬 Vídeos</h4>
-        <div id="video-forms">
+        <div id="video-forms" class="row g-3">
             {{ video_formset.management_form }}
             {% for form in video_formset %}
-            <div class="card mb-2 p-3 shadow-sm">
-                {{ form.as_p }}
-                {% if form.instance.pk %}
+            <div class="col-md-4"> <!-- cada vídeo ocupa 1/3 da linha -->
+                <div class="card p-3 shadow-sm h-100">
+                    {{ form.as_p }}
+                    {% if form.instance.pk %}
                     <label>{{ form.DELETE }} Excluir este vídeo</label>
-                {% endif %}
-                {% for field in form %}
-                    {% if field.errors %}
-                        <div class="alert alert-danger">{{ field.errors }}</div>
                     {% endif %}
-                {% endfor %}
+                    {% for field in form %}
+                    {% if field.errors %}
+                    <div class="alert alert-danger">{{ field.errors }}</div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -100,32 +102,30 @@ Usina - Novo Contrato
         <button type="button" id="add-video" class="btn btn-primary mt-2">+ Adicionar Vídeo</button>
 
         <div id="empty-video-form" style="display:none;">
-            {{ video_formset.empty_form.as_p }}
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm h-100">
+                    {{ video_formset.empty_form.as_p }}
+                </div>
+            </div>
         </div>
+
 
         <!-- Dados do Contrato -->
         <h4 class="mt-4">📑 Dados do Contrato</h4>
         <div class="row">
             <div class="col-md-6 mb-2">
-                {{ contrato_form.vendedor.label_tag }}
-                {{ contrato_form.vendedor }}
-            </div>
-            <div class="col-md-6 mb-2">
-                {{ contrato_form.banco.label_tag }} <small class="text-muted">(opcional)</small>
-                {{ contrato_form.banco }}
+                {{ contrato_form.valor_mensalidade.label_tag }}
+                {{ contrato_form.valor_mensalidade }}
             </div>
             <div class="col-md-6 mb-2">
                 {{ contrato_form.vigencia_meses.label_tag }}
                 {{ contrato_form.vigencia_meses }}
             </div>
             <div class="col-md-6 mb-2">
-                {{ contrato_form.valor_mensalidade.label_tag }}
-                {{ contrato_form.valor_mensalidade }}
+                {{ contrato_form.vendedor.label_tag }}
+                {{ contrato_form.vendedor }}
             </div>
-            <div class="col-md-6 mb-2">
-                <label>Valor Total (calculado automaticamente)</label>
-                <input type="text" id="valor_total" class="form-control" readonly>
-            </div>
+
             <div class="col-md-6 mb-2">
                 {{ contrato_form.data_assinatura.label_tag }}
                 {{ contrato_form.data_assinatura }}
@@ -136,7 +136,12 @@ Usina - Novo Contrato
             </div>
             <div class="col-md-6 mb-2">
                 <label>Data da Última Parcela (calculado automaticamente)</label>
-                <input type="text" id="data_ultima_parcela" class="form-control" readonly>
+                <input type="text" id="data_ultima_parcela" class="form-control"
+                    value="{% if data_ultima_parcela %}{{ data_ultima_parcela|date:'d/m/Y' }}{% endif %}" readonly>
+            </div>
+            <div class="col-md-6 mb-2">
+                {{ contrato_form.banco.label_tag }} <small class="text-muted">(opcional)</small>
+                {{ contrato_form.banco }}
             </div>
             <div class="col-md-12 mb-2">
                 {{ contrato_form.forma_pagamento.label_tag }}
@@ -178,45 +183,54 @@ Usina - Novo Contrato
 <!-- JS -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
-$(document).ready(function() {
-    // Formset de vídeo
-    let formCount = parseInt($('#id_video-TOTAL_FORMS').val());
+    $(document).ready(function () {
+        // Formset de vídeo
+        let formCount = parseInt($('#id_video-TOTAL_FORMS').val());
 
-    $('#add-video').click(function() {
-        let newForm = $('#empty-video-form').html().replace(/__prefix__/g, formCount);
-        $('#video-forms').append('<div class="card mb-2 p-3 shadow-sm">' + newForm + '</div>');
-        formCount++;
-        $('#id_video-TOTAL_FORMS').val(formCount);
-    });
+        $('#add-video').click(function () {
+            let newForm = $('#empty-video-form').html().replace(/__prefix__/g, formCount);
+            $('#video-forms').append(newForm);
+            formCount++;
+            $('#id_video-TOTAL_FORMS').val(formCount);
+        });
 
-    // Calcular valor total
-    function calcularTotal() {
-        const mensalidade = parseFloat($('#id_valor_mensalidade').val()) || 0;
-        const vigencia = parseInt($('#id_vigencia_meses').val()) || 0;
-        $('#valor_total').val((mensalidade * vigencia).toFixed(2));
-    }
 
-    $('#id_valor_mensalidade, #id_vigencia_meses').on('input', calcularTotal);
 
-    // Calcular data da última parcela
-    function calcularDataUltimaParcela() {
-        const vigencia = parseInt($('#id_vigencia_meses').val());
-        const dataInicial = new Date($('#id_data_vencimento_primeira_parcela').val());
-        if (!isNaN(dataInicial) && vigencia) {
-            const dataFinal = new Date(dataInicial);
-            dataFinal.setMonth(dataFinal.getMonth() + vigencia - 1);
-            $('#data_ultima_parcela').val(dataFinal.toISOString().split('T')[0]);
-        } else {
-            $('#data_ultima_parcela').val('');
+        // Calcular data da última parcela
+        function calcularDataUltimaParcela() {
+            const vigencia = parseInt($('#id_vigencia_meses').val());
+            const dataStr = $('#id_data_vencimento_primeira_parcela').val();
+
+            if (dataStr && vigencia) {
+                const partes = dataStr.split("-"); // espera formato yyyy-mm-dd do input type="date"
+                const dataInicial = new Date(partes[0], partes[1] - 1, partes[2]);
+
+                if (!isNaN(dataInicial)) {
+                    const dataFinal = new Date(dataInicial);
+                    dataFinal.setMonth(dataFinal.getMonth() + vigencia - 1);
+
+                    // Formatar DD/MM/YYYY
+                    const dia = String(dataFinal.getDate()).padStart(2, '0');
+                    const mes = String(dataFinal.getMonth() + 1).padStart(2, '0');
+                    const ano = dataFinal.getFullYear();
+
+                    $('#data_ultima_parcela').val(`${dia}/${mes}/${ano}`);
+                } else {
+                    $('#data_ultima_parcela').val('');
+                }
+            } else {
+                $('#data_ultima_parcela').val('');
+            }
         }
-    }
-    $('#id_vigencia_meses, #id_data_vencimento_primeira_parcela').on('input change', calcularDataUltimaParcela);
 
-    // Evitar envio duplo
-    $('#novo-contrato-form').on('submit', function() {
-        $('#submit-button').prop('disabled', true).hide();
-        $('#processing-message').show();
+        $('#id_vigencia_meses, #id_data_vencimento_primeira_parcela').on('input change', calcularDataUltimaParcela);
+
+
+        // Evitar envio duplo
+        $('#novo-contrato-form').on('submit', function () {
+            $('#submit-button').prop('disabled', true).hide();
+            $('#processing-message').show();
+        });
     });
-});
 </script>
 {% endblock %}
