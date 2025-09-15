@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from datetime import datetime, timedelta
 from django.db.models import Q, Count
+from core.services import dashboard as dashboard_service
 
 
 @login_required
@@ -409,3 +410,22 @@ def renovar_contrato(request, pk):
         messages.warning(request, f"⚠ O contrato #{contrato.id_contrato} não possui data de vencimento definida.")
 
     return redirect("contratos_vencendo")
+
+
+@login_required
+def dashboard_view(request):
+    vendedor_id = request.GET.get("vendedor")  # filtro opcional por vendedor
+    mes = request.GET.get("mes")  # filtro opcional por mês (formato YYYY-MM)
+    print(mes)
+    if mes == None or mes == "":
+        mes = datetime.now().strftime("%Y-%m")  # padrão para mês atual
+
+
+    data = dashboard_service.get_dashboard_data(vendedor_id, mes)
+
+    return render(request, "dashboard.html", {
+        "data": data,
+        "vendedores": data["vendedores"],  # lista de vendedores p/ select
+        "selected_vendedor": vendedor_id,
+        "selected_mes": mes,
+    })

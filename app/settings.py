@@ -148,6 +148,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 MEDIA_URL = '/protected_media/'  # Essa URL não será mais servida diretamente
 MEDIA_ROOT = os.path.join(BASE_DIR, 'protected_media')  # Diretório protegido
 
-LOGOUT_REDIRECT_URL = '/contratos/'
-LOGIN_URL = '/admin/'
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/contratos/'

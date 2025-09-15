@@ -23,4 +23,6 @@ urlpatterns = [
     #video novo
     path("contrato/<int:contrato_id>/video/add/", views.video_create_modal, name="video_create_modal"),
 
+    path("dashboard/", views.dashboard_view, name="dashboard"),
+
 ]

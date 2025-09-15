@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br" id="htmlElement" data-bs-theme="dark">
+
 <head>
   {% load static %}
   <meta charset="UTF-8">
@@ -14,6 +15,7 @@
       flex-grow: 1;
       justify-content: center;
     }
+
     /* Garante que o usuário/login/logout fique à direita */
     .navbar-actions {
       display: flex;
@@ -22,13 +24,15 @@
     }
   </style>
 </head>
+
 <body>
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom shadow-sm">
     <div class="container-fluid d-flex justify-content-between align-items-center">
       <!-- Logo / Nome do sistema -->
-      <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">   
-        <img src="{% static 'logo.jpg' %}" alt="Logo Innova LED" class="img-fluid rounded" style="max-width: 150px; max-height: 50px;">
+      <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+        <img src="{% static 'logo.jpg' %}" alt="Logo Innova LED" class="img-fluid rounded"
+          style="max-width: 150px; max-height: 50px;">
       </a>
 
       <!-- Botão responsivo -->
@@ -42,36 +46,46 @@
         <!-- Links centralizados -->
         <ul class="navbar-nav">
           <li class="nav-item me-lg-3">
-            <a class="nav-link" href="#"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+            <a class="nav-link" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
           </li>
           <li class="nav-item me-lg-3">
-            <a class="nav-link" href="{% url 'pendencias_video' %}"><i class="bi bi-camera-video me-1"></i> Pendência de Vídeo</a>
+            <a class="nav-link" href="{% url 'contratos_list' %}"><i class="bi bi-file-earmark-text me-1"></i>
+              Contratos</a>
           </li>
           <li class="nav-item me-lg-3">
-            <a class="nav-link" href="{% url 'pendencias_pagamento' %}"><i class="bi bi-cash-coin me-1"></i> Pendência de Pagamento</a>
+            <a class="nav-link" href="{% url 'contratos_vencendo' %}"><i class="bi bi-calendar-check me-1"></i>
+              Contratos Vencendo</a>
           </li>
           <li class="nav-item me-lg-3">
-            <a class="nav-link" href="{% url 'contratos_list' %}"><i class="bi bi-file-earmark-text me-1"></i> Contratos</a>
+            <a class="nav-link" href="{% url 'pendencias_video' %}"><i class="bi bi-camera-video me-1"></i> Pendência de
+              Vídeo</a>
           </li>
           <li class="nav-item me-lg-3">
-            <a class="nav-link" href="{% url 'contratos_vencendo' %}"><i class="bi bi-calendar-check me-1"></i> Contratos Vencendo</a>
-          </li>
-          <li class="nav-item me-lg-3">
-            <a class="nav-link" href="/admin/" target="_blank"><i class="bi bi-gear me-1"></i> Admin</a>
+            <a class="nav-link" href="{% url 'pendencias_pagamento' %}"><i class="bi bi-cash-coin me-1"></i> Pendência
+              de Pagamento</a>
           </li>
         </ul>
 
         <!-- Usuário logado ou botão de login -->
         <div class="navbar-actions ms-auto">
           {% if user.is_authenticated %}
-            <span class="navbar-text me-3">
-              <i class="bi bi-person-circle"></i> {{ user.username }}
-            </span>
-            <a href="#" class="btn btn-outline-light btn-sm">Sair</a>
+          <a class="nav-link" href="/admin/" target="_blank"><i class="bi bi-gear me-1"></i></a>
+          <span class="navbar-text me-3">
+            <i class="bi bi-person-circle"></i> {{ user.username }}
+          </span>
+          <form action="{% url 'logout' %}" method="post" class="m-0 p-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-light btn-sm d-flex align-items-center">
+              <i class="bi bi-box-arrow-right me-1"></i> Sair
+            </button>
+          </form>
           {% else %}
-            <a href="#" class="btn btn-outline-light btn-sm">Entrar</a>
+          <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm d-flex align-items-center">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Entrar
+          </a>
           {% endif %}
         </div>
+
       </div>
     </div>
   </nav>
@@ -87,4 +101,5 @@
     integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
     crossorigin="anonymous"></script>
 </body>
+
 </html>
