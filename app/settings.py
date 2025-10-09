@@ -151,3 +151,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'protected_media')  # Diretório protegido
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/contratos/'
+
+
+
+USE_THOUSAND_SEPARATOR = True  # Ativa o separador de milhar
+DECIMAL_SEPARATOR = ','  # Separador decimal como vírgula
+THOUSAND_SEPARATOR = '.'  # Separador de milhar como ponto
+NUMBER_GROUPING = 3  # Agrupamento a cada três dígitos

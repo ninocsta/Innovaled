@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Cliente, Contrato, Video, Banco, Vendedor, Local, FormaPagamento, DocumentoContrato
+from .models import Cliente, Contrato, Video, Banco, Vendedor, Local, FormaPagamento, DocumentoContrato, Registro
 import re
 import unicodedata
 
@@ -103,3 +103,34 @@ class DocumentoContratoForm(forms.ModelForm):
             "arquivo": forms.FileInput(attrs={"class": "form-control"}),
             "descricao": forms.TextInput(attrs={"class": "form-control"}),
         }
+
+
+class ContratoRegistroForm(forms.ModelForm):
+    class Meta:
+        model = Registro
+        fields = ['data_hora', 'observacao']
+        widgets = {
+            'data_hora': forms.DateTimeInput(
+                format='%Y-%m-%dT%H:%M',  # Formato para datetime-local
+                attrs={
+                    'class': 'form-control',
+                    'type': 'datetime-local'  # Usa datetime-local para incluir a hora
+                }
+            ),
+            'observacao': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 3,
+                    'placeholder': 'Digite as observações aqui...',
+                }
+            ),
+        }
+        labels = {
+            'data_hora': 'Data do Registro',
+            'observacao': 'Observações',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'

@@ -9,11 +9,14 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <!-- Favicon -->
+  <link rel="icon" type="image/png" href="{% static 'LOGO PDF[1].pdf' %}">
   <style>
-    /* Centraliza os links horizontalmente */
+    /* Centraliza os links horizontalmente e permite quebra em mobile */
     .navbar-nav {
       flex-grow: 1;
       justify-content: center;
+      flex-wrap: wrap;
     }
 
     /* Garante que o usuário/login/logout fique à direita */
@@ -21,6 +24,20 @@
       display: flex;
       align-items: center;
       gap: 1rem;
+    }
+
+    /* Trunca nomes longos de usuário */
+    .navbar-text {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 575px) {
+      .navbar-nav .nav-item {
+        margin-right: 0.5rem;
+      }
     }
   </style>
 </head>

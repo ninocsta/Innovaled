@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block content %}
 <div class="container mt-4">
     <h2 class="text-light mb-4">📅 Contratos Vencendo</h2>
@@ -18,7 +19,7 @@
             <tbody>
                 {% for contrato in contratos %}
                 <tr class="{% if contrato.data_vencimento_contrato <= hoje %}table-danger{% endif %}">
-                    <td>#{{ contrato.id_contrato }}</td>
+                    <td>#{{ contrato.id_contrato|stringformat:"05d" }}</td>
                     <td>{{ contrato.cliente.razao_social }}</td>
                     <td>{{ contrato.data_vencimento_contrato|date:"d/m/Y" }}</td>
                     <td>

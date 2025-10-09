@@ -73,6 +73,8 @@
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
 <script>
   // Métodos de pagamento
   const metodosPagamento = {
@@ -88,21 +90,51 @@
     data: metodosPagamento
   });
 
-  // Faturamento últimos meses
-  const faturamentoMes = {
-    labels: [{% for f in data.faturamento_por_mes %}"{{ f.data_assinatura__month }}/{{ f.data_assinatura__year }}",{% endfor %}],
+
+const labelsFaturamento = {{ labels_faturamento|safe }};
+const dataFaturamento = {{ data_faturamento|safe }};
+
+// Configuração do gráfico
+const ctx = document.getElementById('faturamentoMes').getContext('2d');
+
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: labelsFaturamento,
     datasets: [{
       label: 'Faturamento',
-      data: [{% for f in data.faturamento_por_mes %}{{ f.total|default:0 }},{% endfor %}],
+      data: dataFaturamento,
       borderColor: '#0d6efd',
       backgroundColor: 'rgba(13,110,253,0.3)',
       fill: true,
       tension: 0.3
     }]
-  };
-  new Chart(document.getElementById('faturamentoMes'), {
-    type: 'line',
-    data: faturamentoMes
-  });
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      datalabels: {
+        color: 'white',
+        align: 'top',   // Alinha acima do ponto
+        anchor: 'end',  // Posiciona acima do ponto
+        font: {
+          weight: 'bold'
+        },
+        formatter: function(value) {
+          return 'R$ ' + value.toLocaleString('pt-BR');
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  },
+  plugins: [ChartDataLabels] // Necessário para ativar o plugin
+});
+
+
+
 </script>
 {% endblock %}

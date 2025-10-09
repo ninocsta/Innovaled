@@ -5,31 +5,21 @@
 
     <!-- Cabeçalho -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <!-- Botão voltar -->
-        <a href="{% url 'contratos_list' %}" class="btn btn-outline-light">⬅ Voltar</a>
-        <h2 class="text-light">
-            📑 Contrato #{{ contrato.id_contrato|default:"---" }}
-        </h2>
-        <span class="badge bg-info fs-6">{{ contrato.status.nome_status }}</span>
+        <a href="{% url 'contratos_list' %}" class="btn btn-outline-light">Voltar</a>
+        <h2 class="text-light">📑 Contrato #{{ contrato.id_contrato|default:"---" }}</h2>
+        <span class="badge bg-light fs-6 text-dark">{{ contrato.status.nome_status }}</span>
     </div>
 
-    {% if contrato.primeiro_pagamento and tem_video_pendente %}
-    <div class="alert alert-warning shadow mb-4" role="alert">
-        ⚠️ Este contrato possui <strong>pendência de vídeo</strong>.
-        Algum vídeo ainda não foi ativado após o primeiro pagamento.
-    </div>
+    <!-- Alertas Pendências -->
+    {% if tem_cobranca_pendente %}
+    <div class="alert alert-warning">⚠️ Pendência de cobrança.</div>
     {% elif tem_pagamento_pendente %}
-    <div class="alert alert-warning shadow mb-4" role="alert">
-        ⚠️ Este contrato possui <strong>pendência de pagamento</strong>.
-        Verifique as parcelas em aberto.
-    </div>
+    <div class="alert alert-warning">⚠️ Pendência de pagamento.</div>
+    {% elif contrato.primeiro_pagamento and tem_video_pendente %}
+    <div class="alert alert-warning">⚠️ Pendência de vídeo.</div>
     {% else %}
-    <div class="alert alert-success shadow mb-4" role="alert">
-        ✔ Este contrato está <strong>regularizado</strong>, sem pendências.
-    </div>
+    <div class="alert alert-success">✔ Sem pendências.</div>
     {% endif %}
-
-
 
     <!-- Exibir mensagens de erro ou sucesso -->
     {% if messages %}
@@ -40,74 +30,62 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
     {% endif %}
-    <!-- Informações do Cliente -->
-    <div class="card bg-dark text-light mb-4 shadow">
-        <div class="card-header">
-            <h5 class="mb-0">👤 Cliente</h5>
-        </div>
-        <div class="card-body">
-            <p><strong>Razão Social:</strong> {{ contrato.cliente.razao_social }}</p>
-            <p><strong>CPF/CNPJ:</strong> {{ contrato.cliente.cpf_cnpj }}</p>
-            <p><strong>Email:</strong> {{ contrato.cliente.email }}</p>
-            <p><strong>Telefone:</strong> {{ contrato.cliente.telefone|default:"-" }}</p>
-            <p><strong>Email Financeiro:</strong> {{ contrato.cliente.email_financeiro|default:"-" }}</p>
-            <p><strong>Telefone Financeiro:</strong> {{ contrato.cliente.telefone_financeiro|default:"-" }}</p>
-        </div>
-    </div>
 
-    <!-- Informações do Contrato -->
-    <div class="card bg-dark text-light mb-4 shadow">
-        <div class="card-header">
-            <h5 class="mb-0">📜 Detalhes do Contrato</h5>
+    <!-- Cliente e Contrato -->
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card bg-dark text-light h-100 shadow-sm">
+                <div class="card-header">👤 Cliente</div>
+                <div class="card-body">
+                    <p><strong>Razão Social:</strong> {{ contrato.cliente.razao_social }}</p>
+                    <p><strong>CPF/CNPJ:</strong> {{ contrato.cliente.cpf_cnpj }}</p>
+                    <p><strong>Email:</strong> {{ contrato.cliente.email }}</p>
+                    <p><strong>Telefone:</strong> {{ contrato.cliente.telefone|default:"-" }}
+                    <a href="https://wa.me/{{ contrato.cliente.telefone }}" target="_blank" class="btn btn-outline btn-sm ml-2">
+                        <i class="bi bi-whatsapp"></i>
+                    </a>
+                    </p>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
+        <div class="col-md-6">
+            <div class="card bg-dark text-light h-100 shadow-sm">
+                <div class="card-header">📜 Detalhes do Contrato</div>
+                <div class="card-body">
                     <p><strong>Data Assinatura:</strong> {{ contrato.data_assinatura }}</p>
                     <p><strong>Vigência:</strong> {{ contrato.vigencia_meses }} meses</p>
-                    <p><strong>Vencimento:</strong> {{ contrato.data_vencimento_contrato|default:"-" }}</p>
-                    <p><strong>Vencimento Primeiro Pagamento:</strong> {{                        contrato.data_vencimento_primeira_parcela|default:"-" }}</p>
-
-                </div>
-                <div class="col-md-6">
                     <p><strong>Valor Mensalidade:</strong> R$ {{ contrato.valor_mensalidade }}</p>
                     <p><strong>Valor Total:</strong> R$ {{ contrato.valor_total|default:"-" }}</p>
                     <p><strong>Forma Pagamento:</strong> {{ contrato.forma_pagamento|default:"-" }}</p>
                     <p><strong>Vendedor:</strong> {{ contrato.vendedor|default:"-" }}</p>
+                    <p><strong>Observações:</strong> {{ contrato.observacoes|default:"Nenhuma" }}</p>
+                    <p><strong>Vencimento:</strong> {{ contrato.data_vencimento_contrato|date:"d/m/Y" }}</p>
                 </div>
             </div>
-            <p class="mt-3"><strong>Observações:</strong> {{ contrato.observacoes|default:"Nenhuma" }}</p>
         </div>
     </div>
 
-    <!-- 🎬 Vídeos vinculados -->
-    <div class="card bg-dark text-light mb-4 shadow">
+    <!-- Vídeos -->
+    <div class="card bg-dark text-light my-4 shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">🎬 Vídeos Vinculados</h5>
-            <!-- Botão que abre o modal -->
-            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addVideoModal">
-                <i class="bi bi-plus-circle"></i> Adicionar Vídeo
-            </button>
+            <h5>🎬 Vídeos</h5>
+            <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addVideoModal">+
+                Adicionar</button>
         </div>
         <div class="card-body">
             {% if videos %}
-            <div class="row">
+            <div class="row g-3">
                 {% for video in videos %}
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <p><strong>ID:</strong> {{ video.id }}</p>
-                            <p><strong>Duração:</strong> {{ video.tempo_video }}</p>
-                            <p><strong>Local:</strong> {{ video.local }}</p>
-                            <p><strong>Status:</strong>
-                                {% if video.status %}
-                                <span class="badge bg-success">Ativo</span>
-                                {% else %}
-                                <span class="badge bg-secondary">Inativo</span>
-                                {% endif %}
-                            </p>
-                            <p><strong>Data Upload:</strong> {{ video.data_subiu }}</p>
-                        </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm p-2">
+                        <p><strong>Duração:</strong> {{ video.tempo_video }}s</p>
+                        <p><strong>Local:</strong> {{ video.local }}</p>
+                        <p><strong>Status:</strong>
+                            <span class="badge {% if video.status %}bg-success{% else %}bg-secondary{% endif %}">
+                                {% if video.status %}On{% else %}Off{% endif %}
+                            </span>
+                        </p>
+                        <p><strong>Upload:</strong> {{ video.data_subiu|date:"d/m/Y" }}</p>
                     </div>
                 </div>
                 {% endfor %}
@@ -118,11 +96,12 @@
         </div>
     </div>
 
+
     <!-- 🔹 Modal para adicionar vídeo -->
     <div class="modal fade" id="addVideoModal" tabindex="-1" aria-labelledby="addVideoModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-light">
-                <div class="modal-header">
+                <div class="modal-header bg-secondary">
                     <h5 class="modal-title" id="addVideoModalLabel">Adicionar Vídeo</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Fechar"></button>
@@ -144,170 +123,286 @@
                             </select>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success">Salvar</button>
+                    <div class="modal-footer bg-secondary">
+                        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-outline-light">Salvar</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Pendências -->
-    <div class="card bg-dark text-light mb-4 shadow">
-        <div class="card-header">
-            <h5 class="mb-0">⚠️ Pendências</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <!-- Pendências de Pagamento -->
-                <div class="col-md-6 border-end">
-                    <h5 class="card-title">💰 Pendências de Pagamento</h5>
-                    <p>
-                        <strong>Primeiro pagamento:</strong>
-                        {% if contrato.primeiro_pagamento %}
-                        ✅ Pago em {{ contrato.primeiro_pagamento }}
-                        {% else %}
-                        <span class="text-danger">🚨 Pendente</span>
-                    <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 1 %}"
-                        class="d-flex mt-2">
-                        {% csrf_token %}
-                        <input type="hidden" name="from_detail" value="1">
-                        <input type="date" name="data_pagamento" class="form-control form-control-sm me-2">
-                        <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
-                    </form>
-                    {% endif %}
-                    </p>
-                    <p>
-                        <strong>Segundo pagamento:</strong>
-                        {% if contrato.segundo_pagamento %}
-                        ✅ Pago em {{ contrato.segundo_pagamento }}
-                        {% else %}
-                        <span class="text-danger">🚨 Pendente</span>
-                    <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 2 %}"
-                        class="d-flex mt-2">
-                        {% csrf_token %}
-                        <input type="hidden" name="from_detail" value="1">
-                        <input type="date" name="data_pagamento" class="form-control form-control-sm me-2">
-                        <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
-                    </form>
-                    {% endif %}
-                    </p>
+    <!-- Pendências, Documentos e Registros -->
+    <div class="row g-3">
+
+        <!-- Pendências -->
+        <div class="col-md-6">
+            <div class="card bg-dark text-light h-100 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">⚠️ Pendências</h5>
                 </div>
-                <!-- Pendências de Vídeo -->
-                <div class="col-md-6">
-                    <h5 class="card-title">📺 Pendências de Vídeo</h5>
-                    {% if contrato.primeiro_pagamento %}
-                    {% if videos_pendentes.exists %}
-                    <p class="text-danger">🚨 {{ videos_pendentes.count }} vídeo(s) OFF</p>
-                    <ul>
-                        {% for video in videos_pendentes %}
-                        <li class="mb-2">
-                            ID {{ video.id }} - Local: {{ video.local }} - Tempo: {{ video.tempo_video }}
-                            <form method="post" action="{% url 'ativar_video' video.id %}" class="d-inline ms-2">
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Cobranças e Pagamentos -->
+                        <div class="col-md-6 border-end">
+                            <h5 class="card-title">💰 Pendências</h5>
+
+                            <!-- Cobrança -->
+                            <p>
+                                <strong>Cobrança:</strong>
+                                {% if contrato.cobranca_gerada %}
+                                ✅ Gerada
+                                {% else %}
+                                <span class="text-danger">🚨 Pendente</span>
+                            <form method="post" action="{% url 'marcar_cobranca_gerada' contrato.id_contrato %}"
+                                class="mt-2">
                                 {% csrf_token %}
-                                <input type="date" name="data_subiu"
-                                    class="form-control form-control-sm d-inline-block w-auto"
-                                    placeholder="Data Upload">
                                 <input type="hidden" name="from_detail" value="1">
-                                <button type="submit" class="btn btn-success btn-sm">✅ Ativar</button>
+                                <button type="submit" class="btn btn-sm btn-primary">Gerar Cobrança</button>
                             </form>
+                            {% endif %}
+                            </p>
+
+                            {% if contrato.cobranca_gerada %}
+                            <!-- Primeiro pagamento -->
+                            <p>
+                                <strong>Primeiro pagamento:</strong>
+                                {% if contrato.primeiro_pagamento %}
+                                ✅ Pago em {{ contrato.primeiro_pagamento }}
+                                {% else %}
+                                <span class="text-danger">🚨 Pendente</span>
+                            <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 1 %}"
+                                class="d-flex mt-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="from_detail" value="1">
+                                <input type="date" name="data_pagamento" class="form-control form-control-sm me-2">
+                                <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
+                            </form>
+                            {% endif %}
+                            </p>
+
+                            <!-- Segundo pagamento -->
+                            <p>
+                                <strong>Segundo pagamento:</strong>
+                                {% if contrato.segundo_pagamento %}
+                                ✅ Pago em {{ contrato.segundo_pagamento }}
+                                {% else %}
+                                <span class="text-danger">🚨 Pendente</span>
+                            <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 2 %}"
+                                class="d-flex mt-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="from_detail" value="1">
+                                <input type="date" name="data_pagamento" class="form-control form-control-sm me-2">
+                                <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
+                            </form>
+                            {% endif %}
+                            </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Pendências de Vídeo -->
+                        <div class="col-md-6">
+                            <h5 class="card-title">📺 Pendências de Vídeo</h5>
+                            {% if contrato.primeiro_pagamento %}
+                            {% if videos_pendentes.exists %}
+                            <p class="text-danger">🚨 {{ videos_pendentes.count }} vídeo(s) OFF</p>
+                            <ul class="list-unstyled">
+                                {% for video in videos_pendentes %}
+                                <li class="mb-2">
+                                    ID {{ video.id }} - Local: {{ video.local }} - Tempo: {{ video.tempo_video }}
+                                    <form method="post" action="{% url 'ativar_video' video.id %}"
+                                        class="d-inline ms-2">
+                                        {% csrf_token %}
+                                        <input type="date" name="data_subiu"
+                                            class="form-control form-control-sm d-inline-block w-auto"
+                                            placeholder="Data Upload">
+                                        <input type="hidden" name="from_detail" value="1">
+                                        <button type="submit" class="btn btn-success btn-sm">✅ Ativar</button>
+                                    </form>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="text-success">✅ Todos os vídeos ativos</p>
+                            {% endif %}
+                            {% else %}
+                            <p class="text-secondary">Sem pendência de vídeo (aguardando pagamento)</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documentos e Registros -->
+        <div class="col-md-6">
+            <!-- Documentos -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-folder2-open me-2"></i>Documentos</h5>
+                </div>
+                <div class="card-body p-2">
+                    <ul class="list-group list-group-flush mb-3">
+                        {% for doc in documentos %}
+                        <li class="list-group-item py-2 px-2 bg-dark text-light">
+                            <div class="row align-items-center mb-2 justify-content-between">
+
+                                <!-- Descrição + Arquivo -->
+                                <div class="col-12 col-md-8 text-break mb-2 mb-md-0">
+                                    {% if doc.descricao %}<strong>{{ doc.descricao }}</strong>{% endif %}
+                                    {% if doc.descricao and doc.filename %} - {% endif %}
+                                    {% if doc.filename %}
+                                    <span>{{ doc.filename }}</span>
+                                    {% endif %}
+                                    <br>
+                                    <small class="text-muted">Enviado em {{ doc.created_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+
+                                <!-- Botões -->
+                                <div class="col-12 col-md-4 d-flex gap-2">
+                                    <a href="{{ doc.arquivo.url }}" target="_blank"
+                                        class="btn btn-outline-light btn-sm flex-fill">
+                                        <i class="bi bi-download"></i> <span class="d-none d-md-inline">Baixar</span>
+                                    </a>
+
+                                    <button type="button" class="btn btn-outline-light btn-sm flex-fill"
+                                        data-bs-toggle="modal" data-bs-target="#deleteModal{{ doc.id }}">
+                                        <i class="bi bi-trash"></i> <span class="d-none d-md-inline">Excluir</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </li>
+
+                        <!-- Modal de confirmação para excluir documento -->
+                        <div class="modal fade" id="deleteModal{{ doc.id }}" tabindex="-1"
+                            aria-labelledby="deleteModalLabel{{ doc.id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content bg-dark text-white border-light">
+                                    <div class="modal-header border-secondary bg-secondary">
+                                        <h5 class="modal-title" id="deleteModalLabel{{ doc.id }}">
+                                            Confirmar Exclusão
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                            aria-label="Fechar"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Tem certeza de que deseja excluir este documento?
+                                        {% if doc.descricao %} {{ doc.descricao }}{% endif %}
+                                        {% if doc.descricao and doc.filename %} - {% endif %}
+                                        {% if doc.filename %} {{ doc.filename }} {% endif %}
+                                    </div>
+                                    <div class="modal-footer bg-secondary">
+                                        <button type="button" class="btn btn-outline-light"
+                                            data-bs-dismiss="modal">Cancelar</button>
+
+                                        <form method="post" action="{% url 'documento_delete' doc.id %}"
+                                            style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-light">Excluir</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <li class="list-group-item text-muted py-2 px-2 bg-dark">Nenhum documento anexado.</li>
+                        {% endfor %}
+                    </ul>
+
+                    <!-- Formulário para adicionar documento -->
+                    <form method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
+                        {% csrf_token %}
+
+                        <!-- Campo Arquivo -->
+                        <div class="col-12 col-md-5">
+                            <label for="id_arquivo" class="form-label text-light">Tipo de arquivo</label>
+                            <input type="file" name="arquivo" id="id_arquivo" class="form-control"
+                                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+                        </div>
+
+                        <!-- Campo Descrição -->
+                        <div class="col-12 col-md-5">
+                            <label for="id_descricao" class="form-label text-light">Descrição</label>
+                            <input type="text" name="descricao" id="id_descricao" class="form-control"
+                                placeholder="Ex: Contrato, Procuração...">
+                        </div>
+
+                        <!-- Botão Upload -->
+                        <div class="col-12 col-md-2 d-grid">
+                            <button type="submit" class="btn btn-light">
+                                <i class="bi bi-upload"></i> <span class="d-none d-md-inline">Enviar</span>
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+            <!-- Registros -->
+            <div class="card shadow-sm h-30">
+                <div class="card-header text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>Registros</h5>
+                    <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#registroModal">
+                        <i class="bi bi-plus-circle me-1"></i> Adicionar
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if contrato.registros.all %}
+                    <ul class="list-group list-group-flush">
+                        {% for reg in contrato.registros.all %}
+                        <li class="list-group-item px-3 py-2">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong class="text-primary">
+                                        <i class="bi bi-calendar-event me-1"></i>{{ reg.data_hora|date:"d/m/Y H:i" }}
+                                    </strong>
+                                    <p class="mb-1">{{ reg.observacao }}</p>
+                                    <small class="text-muted"><i class="bi bi-person-circle me-1"></i>Registrado por {{
+                                        reg.created_by }}</small>
+                                </div>
+                            </div>
                         </li>
                         {% endfor %}
                     </ul>
                     {% else %}
-                    <p class="text-success">✅ Todos os vídeos ativos</p>
-                    {% endif %}
-                    {% else %}
-                    <p class="text-secondary">Sem pendência de vídeo (aguardando pagamento)</p>
+                    <p class="text-muted fst-italic">Nenhum registro encontrado.</p>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Registros vinculados -->
-    <div class="card bg-dark text-light mb-4 shadow">
-        <div class="card-header">
-            <h5 class="mb-0">📝 Registros do Contrato</h5>
-        </div>
-        <div class="card-body">
-            {% if registros %}
-            <table class="table table-dark table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Data/Hora</th>
-                        <th>Observação</th>
-                        <th>Criado por</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for reg in registros %}
-                    <tr>
-                        <td>{{ reg.id }}</td>
-                        <td>{{ reg.data_hora|date:"d/m/Y H:i" }}</td>
-                        <td>{{ reg.observacao|default:"-" }}</td>
-                        <td>{{ reg.created_by|default:"-" }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p class="text-muted">Nenhum registro encontrado.</p>
-            {% endif %}
-        </div>
-    </div>
-    <div class="container my-4">
-        <div class="row">
-            <!-- Coluna esquerda: documentos anexados -->
-            <div class="col-md-6">
-                <h4>📂 Documentos Anexados</h4>
-                <ul class="list-group mb-3">
-                    {% for doc in documentos %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            {% if doc.descricao %} {{ doc.descricao }}{% endif %}
-                            <br>
-                            <small class="text-muted">Enviado em {{ doc.created_at|date:"d/m/Y H:i" }}</small>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <a href="{{ doc.arquivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-download"></i> Baixar
-                            </a>
-                            <form method="post" action="{% url 'documento_delete' doc.id %}" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                    onclick="return confirm('Deseja excluir este documento?');">
-                                    <i class="bi bi-trash"></i> Excluir
-                                </button>
-                            </form>
-                        </div>
-                    </li>
-                    {% empty %}
-                    <li class="list-group-item">Nenhum documento anexado.</li>
-                    {% endfor %}
-                </ul>
-            </div>
-
-            <!-- Coluna direita: formulário de upload -->
-            <div class="col-md-6">
-                <h4>➕ Anexar Documento</h4>
-                <form method="post" enctype="multipart/form-data" class="card p-3 shadow-sm">
+    <!-- Modal para adicionar registro -->
+    <div class="modal fade" id="registroModal" tabindex="-1" aria-labelledby="registroModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <form method="post" action="{% url 'criar_contrato_registro' contrato.id_contrato %}">
                     {% csrf_token %}
-                    <div class="row g-3">
-                        <div class="col-12">
-                            {{ documento_form.arquivo.label_tag }}
-                            {{ documento_form.arquivo }}
+                    <div class="modal-header bg-secondary text-white">
+                        <h5 class="modal-title" id="registroModalLabel">
+                            <i class="bi bi-plus-circle me-2"></i>Adicionar Registro
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="id_data_hora" class="form-label">Data do Registro</label>
+                            <input type="datetime-local" name="data_hora" id="id_data_hora" class="form-control"
+                                value="{{ now|date:'Y-m-d\\TH:i' }}" required>
                         </div>
-                        <div class="col-12">
-                            {{ documento_form.descricao.label_tag }}
-                            {{ documento_form.descricao }}
+                        <div class="mb-3">
+                            <label for="id_observacao" class="form-label">Observações</label>
+                            <textarea name="observacao" id="id_observacao" rows="3" class="form-control"
+                                placeholder="Digite as observações..." required></textarea>
                         </div>
                     </div>
-                    <div class="mt-3">
-                        <button type="submit" class="btn btn-success w-100">
-                            <i class="bi bi-upload"></i> Salvar Documento
+                    <div class="modal-footer bg-secondary">
+                        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-outline-light">
+                            <i class="bi bi-check-circle me-1"></i> Salvar
                         </button>
                     </div>
                 </form>
@@ -315,14 +410,5 @@
         </div>
     </div>
 
-</div>
 
-<script>
-    document.addEventListener('hidden.bs.modal', function (event) {
-    // Remove the focus from the active element
-    if (document.activeElement) {
-    document.activeElement.blur();
-    }
-});
-</script>
-{% endblock %}
+    {% endblock %}

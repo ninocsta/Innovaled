@@ -1,52 +1,81 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container mt-4">
-    <h2 class="text-light mb-4">💰 Pendências de Pagamento</h2>
+    <h2 class="text-light mb-4">💰 Pendências</h2>
 
-    {% if contratos %}
-    <div class="row">
-        {% for contrato in contratos %}
-        <div class="col-md-6 mb-3">
-            <div class="card shadow bg-dark border-warning text-light">
-                <div class="card-body">
-                    <h5 class="card-title">Contrato #{{ contrato.id_contrato }}</h5>
-                    <p><strong>Cliente:</strong> {{ contrato.cliente.razao_social }}</p>
-                    <p>
-                        <strong>Primeiro pagamento:</strong>
-                        {% if contrato.primeiro_pagamento %}
-                        ✅ Pago em {{ contrato.primeiro_pagamento }}
-                        {% else %}
-                        <span class="text-danger">🚨 Pendente</span>
-                    <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 1 %}"
-                        class="d-flex mt-2">
-                        {% csrf_token %}
-                        <input type="date" name="data_pagamento" class="form-control form-control-sm me-2">
-                        <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
-                    </form>
-                    {% endif %}
-                    </p>
-                    <p>
-                        <strong>Segundo pagamento:</strong>
-                       {% if contrato.segundo_pagamento %}
-                        ✅ Pago em {{ contrato.segundo_pagamento }}
-                        {% else %}
-                        <span class="text-danger">🚨 Pendente</span>
-                    <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 2 %}"
-                        class="d-flex mt-2">
-                        {% csrf_token %}
-                        <input type="date" name="data_pagamento" class="form-control form-control-sm me-2">
-                        <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
-                    </form>
-                    {% endif %}
-
-                    </p>
+    <!-- Pendências de cobrança -->
+    <h4 class="text-warning">⚠️ Pendências de Cobrança</h4>
+    {% if pendencias_cobranca %}
+        <div class="row g-3">
+            {% for contrato in pendencias_cobranca %}
+            <div class="col-12 col-md-6">
+                <div class="card shadow bg-dark border-warning text-light h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Contrato #{{ contrato.id_contrato }}</h5>
+                        <p><strong>Cliente:</strong> {{ contrato.cliente.razao_social }}</p>
+                        <p><strong>Cobrança:</strong> 🚨 Pendente</p>
+                        <form method="post" action="{% url 'marcar_cobranca_gerada' contrato.id_contrato %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-primary">Gerar Cobrança</button>
+                        </form>
+                    </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
     {% else %}
-    <div class="alert alert-success">🎉 Não há pendências de pagamento.</div>
+        <div class="alert alert-success">✅ Nenhuma pendência de cobrança.</div>
+    {% endif %}
+
+    <hr class="border-secondary my-4">
+
+    <!-- Pendências de pagamento -->
+    <h4 class="text-danger">💸 Pendências de Pagamento</h4>
+    {% if pendencias_pagamento %}
+        <div class="row g-3">
+            {% for contrato in pendencias_pagamento %}
+            <div class="col-12 col-md-6">
+                <div class="card shadow bg-dark border-danger text-light h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Contrato #{{ contrato.id_contrato }}</h5>
+                        <p><strong>Cliente:</strong> {{ contrato.cliente.razao_social }}</p>
+
+                        <!-- Primeiro pagamento -->
+                        <p>
+                            <strong>Primeiro pagamento:</strong>
+                            {% if contrato.primeiro_pagamento %}
+                                ✅ Pago em {{ contrato.primeiro_pagamento }}
+                            {% else %}
+                                <span class="text-danger">🚨 Pendente</span>
+                                <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 1 %}" class="d-flex mt-2 flex-column flex-sm-row gap-2">
+                                    {% csrf_token %}
+                                    <input type="date" name="data_pagamento" class="form-control form-control-sm">
+                                    <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
+                                </form>
+                            {% endif %}
+                        </p>
+
+                        <!-- Segundo pagamento -->
+                        <p>
+                            <strong>Segundo pagamento:</strong>
+                            {% if contrato.segundo_pagamento %}
+                                ✅ Pago em {{ contrato.segundo_pagamento }}
+                            {% else %}
+                                <span class="text-danger">🚨 Pendente</span>
+                                <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 2 %}" class="d-flex mt-2 flex-column flex-sm-row gap-2">
+                                    {% csrf_token %}
+                                    <input type="date" name="data_pagamento" class="form-control form-control-sm">
+                                    <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
+                                </form>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-success">✅ Nenhuma pendência de pagamento.</div>
     {% endif %}
 </div>
 {% endblock %}

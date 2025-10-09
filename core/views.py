@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.core.paginator import Paginator
-from .models import Contrato, Vendedor, Local, Cliente, StatusContrato, DocumentoContrato, Video
-from .forms import ClienteForm, ContratoForm, DocumentoContratoForm, VideoFormSet, VideoForm
+from .models import Contrato, Vendedor, Local, Cliente, StatusContrato, DocumentoContrato, Video, Registro
+from .forms import ClienteForm, ContratoForm, DocumentoContratoForm, VideoFormSet, VideoForm, ContratoRegistroForm
 from django.contrib import messages
 from django.shortcuts import redirect
 from dateutil.relativedelta import relativedelta
@@ -11,6 +11,11 @@ from django.shortcuts import get_object_or_404
 from datetime import datetime, timedelta
 from django.db.models import Q, Count
 from core.services import dashboard as dashboard_service
+from django.http import HttpResponse
+import pandas as pd
+from django.template.loader import render_to_string
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 
 @login_required
@@ -226,6 +231,7 @@ def contrato_detail(request, pk):
     documentos = contrato.documentos.all()
     videos = contrato.videos.all()
     locais = Local.objects.all()  # Para popular o select no modal
+    now = timezone.now()
 
     # Preparar vídeos pendentes e ativos
     videos_pendentes = videos.filter(status=False)
@@ -233,13 +239,18 @@ def contrato_detail(request, pk):
 
     # Flags para pendências
     tem_video_pendente = videos_pendentes.exists()
-    tem_pagamento_pendente = not contrato.primeiro_pagamento or not contrato.segundo_pagamento
+    tem_cobranca_pendente = not contrato.cobranca_gerada
+    tem_pagamento_pendente = contrato.cobranca_gerada and (
+        not contrato.primeiro_pagamento or not contrato.segundo_pagamento
+    )
 
     if request.method == "POST":
         form = DocumentoContratoForm(request.POST, request.FILES)
         if form.is_valid():
             documento = form.save(commit=False)
             documento.contrato = contrato
+            documento.created_by = request.user
+            documento.updated_by = request.user
             documento.save()
             messages.success(request, "📂 Documento anexado com sucesso!")
             return redirect("contrato_detail", pk=contrato.pk)
@@ -254,8 +265,10 @@ def contrato_detail(request, pk):
         "videos_pendentes": videos_pendentes,
         "videos_ativos": videos_ativos,
         "tem_video_pendente": tem_video_pendente,
+        "tem_cobranca_pendente": tem_cobranca_pendente,
         "tem_pagamento_pendente": tem_pagamento_pendente,
         "locais": locais,
+        "now": now,
     })
 
 
@@ -276,15 +289,37 @@ def pendencias_video(request):
     return render(request, "pendencias/pendencias_video.html", {"contratos": contratos})
 
 
-# Tela de pendências de pagamento
+# views.py
 @login_required
 def pendencias_pagamento(request):
-    contratos = Contrato.objects.filter(
+    # pendências de cobrança (cobrança ainda não gerada)
+    pendencias_cobranca = Contrato.objects.filter(
+        cobranca_gerada=False
+    ).select_related("cliente")
+
+    # pendências de pagamento (cobrança gerada, mas falta algum pagamento)
+    pendencias_pagamento = Contrato.objects.filter(
+        cobranca_gerada=True
+    ).filter(
         Q(primeiro_pagamento__isnull=True) | Q(segundo_pagamento__isnull=True)
     ).select_related("cliente")
 
-    return render(request, "pendencias/pendencias_pagamento.html", {"contratos": contratos})
+    context = {
+        "pendencias_cobranca": pendencias_cobranca,
+        "pendencias_pagamento": pendencias_pagamento,
+    }
+    return render(request, "pendencias/pendencias_pagamento.html", context)
 
+
+
+@login_required
+def marcar_cobranca_gerada(request, contrato_id):
+    contrato = get_object_or_404(Contrato, id_contrato=contrato_id)
+    contrato.cobranca_gerada = True
+    contrato.updated_by = request.user
+    contrato.save()
+    messages.success(request, f"Cobrança do contrato #{contrato.id_contrato} foi marcada como gerada.")
+    return redirect("pendencias_pagamento")
 
 
 @login_required
@@ -302,7 +337,7 @@ def marcar_pagamento(request, contrato_id, parcela):
             contrato.primeiro_pagamento = data_pagto
         elif parcela == 2:
             contrato.segundo_pagamento = data_pagto
-
+        contrato.updated_by = request.user
         contrato.save()
         messages.success(
             request,
@@ -332,7 +367,7 @@ def ativar_video(request, video_id):
                 video.data_subiu = timezone.now().date()
         else:
             video.data_subiu = timezone.now().date()
-
+        video.updated_by = request.user        
         video.status = True
         video.save()
         messages.success(request, f"🎬 Vídeo {video.id} ativado com sucesso!")
@@ -401,6 +436,7 @@ def renovar_contrato(request, pk):
 
     if contrato.data_vencimento_contrato:
         contrato.data_vencimento_contrato += relativedelta(months=1)
+        contrato.updated_by = request.user
         contrato.save()
         messages.success(
             request,
@@ -416,16 +452,125 @@ def renovar_contrato(request, pk):
 def dashboard_view(request):
     vendedor_id = request.GET.get("vendedor")  # filtro opcional por vendedor
     mes = request.GET.get("mes")  # filtro opcional por mês (formato YYYY-MM)
-    print(mes)
+    
     if mes == None or mes == "":
         mes = datetime.now().strftime("%Y-%m")  # padrão para mês atual
 
+    
 
     data = dashboard_service.get_dashboard_data(vendedor_id, mes)
+    
+    faturamento_mes = data["faturamento_por_mes"]
+
+    labels_faturamento = [f"{item['mes']}/{item['ano']}" for item in faturamento_mes]
+    data_faturamento = [float(item['faturamento_total']) for item in faturamento_mes]
 
     return render(request, "dashboard.html", {
         "data": data,
         "vendedores": data["vendedores"],  # lista de vendedores p/ select
         "selected_vendedor": vendedor_id,
         "selected_mes": mes,
+        "labels_faturamento": labels_faturamento,
+        "data_faturamento": data_faturamento,
     })
+
+
+@login_required
+def exportar_contratos_excel(request):
+    qs = Contrato.objects.select_related(
+        "cliente", "vendedor", "forma_pagamento", "status", "banco"
+    ).prefetch_related("videos__local")
+
+    # ----- FILTROS -----
+    nome = request.GET.get("nome")
+    if nome:
+        qs = qs.filter(cliente__razao_social__icontains=nome)
+
+    cnpj = request.GET.get("cnpj")
+    if cnpj:
+        qs = qs.filter(cliente__cpf_cnpj__icontains=cnpj)
+
+    vendedor = request.GET.get("vendedor")
+    if vendedor:
+        qs = qs.filter(vendedor_id=vendedor)
+
+    local = request.GET.get("local")
+    if local:
+        qs = qs.filter(videos__local_id=local)
+
+    data_inicio = request.GET.get("data_inicio")
+    data_fim = request.GET.get("data_fim")
+    if data_inicio and data_fim:
+        qs = qs.filter(data_assinatura__range=[data_inicio, data_fim])
+    elif data_inicio:
+        qs = qs.filter(data_assinatura__gte=data_inicio)
+    elif data_fim:
+        qs = qs.filter(data_assinatura__lte=data_fim)
+
+    # ----- DADOS -----
+    data = []
+    for contrato in qs:
+        locais = ", ".join([v.local.nome for v in contrato.videos.all() if v.local])
+        status_videos = ", ".join(["ON" if v.status else "OFF" for v in contrato.videos.all()]) or "Sem vídeo"
+        tempos_videos = ", ".join([str(v.tempo_video) for v in contrato.videos.all()])
+        datas_subida = ", ".join([v.data_subiu.strftime("%d/%m/%Y") for v in contrato.videos.all() if v.data_subiu])
+
+        data.append({
+            "ID Contrato": contrato.id_contrato,
+            "Cliente": contrato.cliente.razao_social,
+            "CPF/CNPJ": contrato.cliente.cpf_cnpj,
+            "Email Cliente": contrato.cliente.email,
+            "Telefone Cliente": contrato.cliente.telefone,
+            "Telefone Financeiro": contrato.cliente.telefone_financeiro,
+            "Email Financeiro": contrato.cliente.email_financeiro,
+            "Vendedor": contrato.vendedor.nome if contrato.vendedor else "",
+            "Banco": contrato.banco.nome if contrato.banco else "",
+            "Cobrança Gerada": "Sim" if contrato.cobranca_gerada else "Não",
+            "Primeiro Pagamento": contrato.primeiro_pagamento.strftime("%d/%m/%Y") if contrato.primeiro_pagamento else "",
+            "Segundo Pagamento": contrato.segundo_pagamento.strftime("%d/%m/%Y") if contrato.segundo_pagamento else "",
+            "Data Assinatura": contrato.data_assinatura.strftime("%d/%m/%Y") if contrato.data_assinatura else "",
+            "Data Vencimento Contrato": contrato.data_vencimento_contrato.strftime("%d/%m/%Y") if contrato.data_vencimento_contrato else "",
+            "Data Cancelamento": contrato.data_cancelamento_contrato.strftime("%d/%m/%Y") if contrato.data_cancelamento_contrato else "",
+            "Data Vencimento 1ª Parcela": contrato.data_vencimento_primeira_parcela.strftime("%d/%m/%Y") if contrato.data_vencimento_primeira_parcela else "",
+            "Data Última Parcela": contrato.data_ultima_parcela.strftime("%d/%m/%Y") if contrato.data_ultima_parcela else "",
+            "Valor Mensalidade": contrato.valor_mensalidade,
+            "Vigência (meses)": contrato.vigencia_meses,
+            "Valor Total": contrato.valor_total,
+            "Forma de Pagamento": contrato.forma_pagamento.nome if contrato.forma_pagamento else "",
+            "Status Contrato": contrato.status.nome_status if contrato.status else "",
+            "Telões": locais or "Sem local",
+            "Status Vídeos": status_videos,
+            "Tempo Vídeos": tempos_videos,
+            "Datas Subida Vídeos": datas_subida,
+            "Observações": contrato.observacoes or "",
+        })
+
+    # Criar DataFrame
+    df = pd.DataFrame(data)
+
+    # Gerar Excel em memória
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="contratos.xlsx"'
+
+    with pd.ExcelWriter(response, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Contratos")
+
+    return response
+
+
+@login_required
+def criar_contrato_registro(request, contrato_id):
+    contrato = get_object_or_404(Contrato, id_contrato=contrato_id)
+    if request.method == "POST":
+        form = ContratoRegistroForm(request.POST)
+        if form.is_valid():
+            registro = form.save(commit=False)
+            registro.contrato = contrato
+            registro.created_by = request.user
+            registro.updated_by = request.user
+            registro.save()
+            return redirect('contrato_detail', pk=contrato.pk)
+    else:
+        form = ContratoRegistroForm()

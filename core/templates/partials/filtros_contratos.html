@@ -1,11 +1,16 @@
 <form method="get" class="row g-3 mb-4">
-    <div class="col-md-2">
+    <div class="col-12 col-md-2">
+        <label class="form-label">Razão Social</label>
         <input type="text" name="nome" value="{{ query_nome }}" class="form-control" placeholder="Razão Social">
     </div>
-    <div class="col-md-2">
+
+    <div class="col-12 col-md-2">
+        <label class="form-label">CPF/CNPJ</label>
         <input type="text" name="cnpj" value="{{ query_cnpj }}" class="form-control" placeholder="CPF/CNPJ">
     </div>
-    <div class="col-md-2">
+
+    <div class="col-12 col-md-2">
+        <label class="form-label">Vendedor</label>
         <select name="vendedor" class="form-select">
             <option value="">-- Vendedor --</option>
             {% for v in vendedores %}
@@ -13,7 +18,9 @@
             {% endfor %}
         </select>
     </div>
-    <div class="col-md-2">
+
+    <div class="col-12 col-md-2">
+        <label class="form-label">Telão</label>
         <select name="local" class="form-select">
             <option value="">-- Telão --</option>
             {% for l in locais %}
@@ -21,22 +28,31 @@
             {% endfor %}
         </select>
     </div>
-    <div class="col-md-2">
+
+    <div class="col-12 col-md-2">
+        <label class="form-label">Data Início</label>
         <input type="date" name="data_inicio" value="{{ query_data_inicio }}" class="form-control">
     </div>
-    <div class="col-md-2">
+
+    <div class="col-12 col-md-2">
+        <label class="form-label">Data Fim</label>
         <input type="date" name="data_fim" value="{{ query_data_fim }}" class="form-control">
     </div>
+
     <div class="w-100"></div>
-    <div class="col-md-10"></div>
-    <div class="col-md-1 align-self-end">
+
+    <div class="col-12 col-md-10"></div>
+
+    <div class="col-6 col-md-1 align-self-end">
+        <label class="form-label">Itens</label>
         <select name="itens" class="form-select" onchange="this.form.submit()">
             <option value="10" {% if itens_por_pagina == 10 %}selected{% endif %}>10</option>
             <option value="25" {% if itens_por_pagina == 25 %}selected{% endif %}>25</option>
             <option value="50" {% if itens_por_pagina == 50 %}selected{% endif %}>50</option>
         </select>
     </div>
-        <div class="col-md-1 d-grid align-self-end">
+
+    <div class="col-6 col-md-1 d-grid align-self-end">
         <button type="submit" class="btn btn-light">Filtrar</button>
     </div>
 </form>

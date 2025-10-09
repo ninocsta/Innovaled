@@ -12,6 +12,8 @@ urlpatterns = [
     # Pendências globais
     path("pendencias/video/", views.pendencias_video, name="pendencias_video"),
     path("pendencias/pagamento/", views.pendencias_pagamento, name="pendencias_pagamento"),
+    path("cobranca/<int:contrato_id>/gerar/", views.marcar_cobranca_gerada, name="marcar_cobranca_gerada"),
+
 
     # Ações
     path("contrato/<int:video_id>/ativar_video/", views.ativar_video, name="ativar_video"),
@@ -24,5 +26,8 @@ urlpatterns = [
     path("contrato/<int:contrato_id>/video/add/", views.video_create_modal, name="video_create_modal"),
 
     path("dashboard/", views.dashboard_view, name="dashboard"),
+
+    path("contratos/exportar/", views.exportar_contratos_excel, name="contratos_export"),
+    path("contratos/<int:contrato_id>/adicionar-registro/", views.criar_contrato_registro, name="criar_contrato_registro"),
 
 ]
