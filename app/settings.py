@@ -25,7 +25,6 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -74,8 +73,12 @@ WSGI_APPLICATION = 'app.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
@@ -129,32 +132,12 @@ NUMBER_GROUPING = 3  # Agrupamento a cada três dígitos
 
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
-# Para dev: onde ficam os arquivos estáticos do projeto
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-]
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
-# Para prod: onde o collectstatic vai jogar todos os arquivos
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
-
-#### COLOCAR EM PRODUCAO ASSIM ########
-####STATIC_URL = '/static/'
-###STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
-####
-
-
-MEDIA_URL = '/protected_media/'  # Essa URL não será mais servida diretamente
-MEDIA_ROOT = os.path.join(BASE_DIR, 'protected_media')  # Diretório protegido
 
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/contratos/'
-
-
-
-USE_THOUSAND_SEPARATOR = True  # Ativa o separador de milhar
-DECIMAL_SEPARATOR = ','  # Separador decimal como vírgula
-THOUSAND_SEPARATOR = '.'  # Separador de milhar como ponto
-NUMBER_GROUPING = 3  # Agrupamento a cada três dígitos
