@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-ENVIRONMENT = os.getenv("DJANGO_ENV", "a")  # Se não estiver definido, assume "production"
+ENVIRONMENT = os.getenv("DJANGO_ENV", "production")  # Se não estiver definido, assume "production"
 
 # Define qual arquivo .env carregar
 if ENVIRONMENT == "production":

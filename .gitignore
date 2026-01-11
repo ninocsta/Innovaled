@@ -7,3 +7,6 @@ db.sqlite3
 *.pyc
 /static
 /protected_media
+media/
+sites-enabled/
+.env.*
