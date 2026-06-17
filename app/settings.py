@@ -119,18 +119,20 @@ NUMBER_GROUPING = 3  # Agrupamento a cada três dígitos
 
 
 LOGOUT_REDIRECT_URL = '/'
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/contratos/'
+LOGIN_URL = '/app/login/'
+LOGIN_REDIRECT_URL = '/app/contratos/'
 
 
 SESSION_COOKIE_NAME = "innovaled_sessionid"
 CSRF_COOKIE_NAME = "innovaled_csrftoken"
 
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)
+CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
 
-CSRF_TRUSTED_ORIGINS = [
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
     "https://app.innovaled.com.br",
-]
+    "https://innovaled.com.br",
+    "https://www.innovaled.com.br",
+])
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

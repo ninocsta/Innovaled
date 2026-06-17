@@ -1,0 +1,576 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Innova LED — Painéis de LED Indoor & Outdoor</title>
+<meta name="description" content="Soluções completas em painéis de LED: venda, locação, manutenção e publicidade. Tecnologia de ponta, montagem rápida e alto impacto visual.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: #06080F;
+    color: #EAF1FF;
+    font-family: 'Manrope', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { text-decoration: none; color: inherit; }
+  input, textarea, select, button { font-family: inherit; }
+  ::placeholder { color: #5E6B82; }
+
+  :root {
+    --ac: #19E3FF;
+    --ac2: #8B5CF6;
+  }
+
+  @keyframes ilFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-14px); }
+  }
+  @keyframes ilMarquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes ilScan {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(220%); }
+  }
+  @keyframes ilBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .35; }
+  }
+  @keyframes ilPulse {
+    0%, 100% { opacity: .5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.08); }
+  }
+
+  /* NAV */
+  .nav-links { display: none; align-items: center; gap: 32px; font: 600 14px/1 'Manrope'; }
+  .nav-links a { color: #B9C4D8; transition: color .2s; }
+  .nav-links a:hover { color: #fff; }
+
+  /* Service cards */
+  .service-card { transition: transform .25s, border-color .25s, box-shadow .25s; }
+  .service-card:hover {
+    transform: translateY(-6px);
+    border-color: color-mix(in srgb, var(--ac) 45%, transparent) !important;
+    box-shadow: 0 30px 60px -30px rgba(0,0,0,.8), 0 0 50px -22px color-mix(in srgb, var(--ac) 60%, transparent);
+  }
+  .service-card-highlight:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 30px 60px -30px rgba(0,0,0,.8), 0 0 60px -18px color-mix(in srgb, var(--ac) 75%, transparent);
+  }
+
+  /* CTA primary */
+  .cta-primary { transition: transform .2s, box-shadow .2s; }
+  .cta-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 44px color-mix(in srgb, var(--ac) 70%, transparent) !important;
+  }
+  .cta-outline { transition: border-color .2s, background .2s; }
+  .cta-outline:hover {
+    border-color: color-mix(in srgb, var(--ac) 60%, transparent) !important;
+    background: color-mix(in srgb, var(--ac) 7%, transparent) !important;
+  }
+
+  /* Hero image */
+  .hero-img-wrap { animation: ilFloat 7s ease-in-out infinite; }
+
+  /* Bento card */
+  .bento-featured { transition: transform .25s; }
+  .bento-featured:hover { transform: scale(1.012); }
+  .bento-card { transition: border-color .25s, transform .25s; }
+  .bento-card:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--ac) 40%, transparent) !important;
+  }
+
+  /* Diff cards */
+  .diff-card { transition: border-color .25s; }
+  .diff-card:hover { border-color: color-mix(in srgb, var(--ac) 40%, transparent) !important; }
+
+  /* Footer links */
+  footer a:hover { color: var(--ac) !important; }
+
+  /* WA float */
+  .wa-float { transition: transform .2s; }
+  .wa-float:hover { transform: scale(1.08); }
+
+  /* Reveal animation */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Responsive */
+  @media (min-width: 900px) {
+    .nav-links { display: flex !important; }
+  }
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+    .cards-grid { grid-template-columns: 1fr 1fr !important; }
+    .panels-grid { grid-template-columns: 1fr !important; }
+    .diff-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
+    .diff-sticky { position: static !important; }
+    .footer-grid { grid-template-columns: 1fr 1fr !important; gap: 32px !important; }
+    .bento-grid { grid-template-columns: 1fr 1fr !important; }
+  }
+  @media (max-width: 560px) {
+    .cards-grid { grid-template-columns: 1fr !important; }
+    .bento-grid { grid-template-columns: 1fr !important; grid-auto-rows: auto !important; }
+    .bento-grid > * { grid-column: span 1 !important; grid-row: span 1 !important; min-height: 220px; }
+    .footer-grid { grid-template-columns: 1fr !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="root" style="position:relative;min-height:100vh;background:radial-gradient(1200px 700px at 78% -8%, rgba(25,227,245,0.10), transparent 60%), radial-gradient(900px 600px at 5% 30%, rgba(139,92,246,0.08), transparent 55%), #06080F">
+
+  <!-- NAV -->
+  <header style="position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(6,8,15,0.72);border-bottom:1px solid rgba(130,165,220,0.10)">
+    <nav style="max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:24px">
+      <a href="#topo" style="display:flex;align-items:center">
+        <img src="{% static 'landing/logo-white.png' %}" alt="Innova LED" style="height:34px;width:auto;display:block;filter:drop-shadow(0 0 14px color-mix(in srgb,var(--ac) 40%,transparent))">
+      </a>
+      <div class="nav-links">
+        <a href="#servicos">Serviços</a>
+        <a href="#paineis">Painéis</a>
+        <a href="#casos">Casos de uso</a>
+        <a href="#diferenciais">Diferenciais</a>
+        <a href="#contato">Contato</a>
+      </div>
+      <a id="nav-wa" href="#" target="_blank" rel="noopener" class="cta-primary" style="display:inline-flex;align-items:center;gap:9px;background:var(--ac);color:#04141a;font:700 14px/1 'Manrope';padding:12px 18px;border-radius:999px;box-shadow:0 0 30px color-mix(in srgb,var(--ac) 45%,transparent)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.06 24l1.68-6.13A11.86 11.86 0 0 1 .16 11.9C.16 5.34 5.5 0 12.06 0a11.82 11.82 0 0 1 8.42 3.49 11.82 11.82 0 0 1 3.48 8.42c0 6.56-5.34 11.9-11.9 11.9a11.9 11.9 0 0 1-5.69-1.45L.06 24zM6.6 20.2c1.68.99 3.29 1.59 5.45 1.59 5.45 0 9.89-4.43 9.89-9.88 0-2.64-1.03-5.12-2.9-6.99a9.82 9.82 0 0 0-6.98-2.9c-5.46 0-9.9 4.44-9.9 9.89 0 2.27.71 3.97 1.74 5.5l-.99 3.62 3.69-.83zM17.9 14.7c-.07-.12-.27-.19-.56-.34-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.21-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.79.37-.27.3-1.04 1.01-1.04 2.48 0 1.46 1.06 2.87 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.69.25-1.29.17-1.41z"/></svg>
+        WhatsApp
+      </a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section id="topo" style="position:relative;overflow:hidden">
+    <canvas id="led-canvas" style="position:absolute;inset:0;width:100%;height:100%;opacity:.9;pointer-events:none"></canvas>
+    <div style="position:absolute;inset:0;background:radial-gradient(900px 520px at 50% 0%, transparent, rgba(6,8,15,0.55) 70%, #06080F);pointer-events:none"></div>
+    <div class="hero-grid" style="position:relative;max-width:1200px;margin:0 auto;padding:64px 24px 84px;display:grid;grid-template-columns:1.05fr 0.95fr;gap:56px;align-items:center">
+
+      <div>
+        <div class="reveal" style="display:inline-flex;align-items:center;gap:10px;padding:7px 14px;border:1px solid color-mix(in srgb,var(--ac) 35%,transparent);border-radius:999px;background:color-mix(in srgb,var(--ac) 8%,transparent);font:600 12px/1 'Space Grotesk';letter-spacing:.16em;text-transform:uppercase;color:var(--ac)">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--ac);box-shadow:0 0 12px var(--ac);animation:ilBlink 1.6s ease-in-out infinite"></span>
+          Painéis de LED • Indoor &amp; Outdoor
+        </div>
+        <h1 class="reveal" style="font:600 clamp(38px,5.6vw,66px)/1.02 'Space Grotesk';letter-spacing:-0.025em;margin:22px 0 0">
+          A sua marca em<br><span style="color:var(--ac);text-shadow:0 0 34px color-mix(in srgb,var(--ac) 55%,transparent)">alta resolução.</span>
+        </h1>
+        <p class="reveal" style="margin:22px 0 0;max-width:520px;font-size:18px;line-height:1.6;color:#A7B2C6">
+          Venda, locação, manutenção e publicidade em painéis de LED. Tecnologia de ponta, montagem rápida e <strong style="color:#EAF1FF;font-weight:600">alto impacto visual</strong> para eventos, varejo, feiras e shoppings.
+        </p>
+        <div class="reveal" style="display:flex;flex-wrap:wrap;gap:14px;margin-top:32px">
+          <a id="hero-wa" href="#" target="_blank" rel="noopener" class="cta-primary" style="display:inline-flex;align-items:center;gap:10px;background:var(--ac);color:#04141a;font:700 15px/1 'Manrope';padding:16px 24px;border-radius:999px;box-shadow:0 0 36px color-mix(in srgb,var(--ac) 50%,transparent)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.06 24l1.68-6.13A11.86 11.86 0 0 1 .16 11.9C.16 5.34 5.5 0 12.06 0a11.82 11.82 0 0 1 8.42 3.49 11.82 11.82 0 0 1 3.48 8.42c0 6.56-5.34 11.9-11.9 11.9a11.9 11.9 0 0 1-5.69-1.45L.06 24zM6.6 20.2c1.68.99 3.29 1.59 5.45 1.59 5.45 0 9.89-4.43 9.89-9.88 0-2.64-1.03-5.12-2.9-6.99a9.82 9.82 0 0 0-6.98-2.9c-5.46 0-9.9 4.44-9.9 9.89 0 2.27.71 3.97 1.74 5.5l-.99 3.62 3.69-.83z"/></svg>
+            Pedir orçamento no WhatsApp
+          </a>
+          <a href="#servicos" class="cta-outline" style="display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(150,170,210,0.25);color:#EAF1FF;font:600 15px/1 'Manrope';padding:16px 22px;border-radius:999px">Conhecer serviços</a>
+        </div>
+        <div class="reveal" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:30px">
+          <span style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#93A0B7"><span style="color:var(--ac)">●</span> Indoor &amp; Outdoor</span>
+          <span style="opacity:.3">|</span>
+          <span style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#93A0B7"><span style="color:var(--ac)">●</span> Montagem rápida</span>
+          <span style="opacity:.3">|</span>
+          <span style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#93A0B7"><span style="color:var(--ac)">●</span> Pontos estratégicos próprios</span>
+        </div>
+      </div>
+
+      <div class="reveal" style="position:relative">
+        <div class="hero-img-wrap" style="position:relative;border-radius:22px;overflow:hidden;border:1px solid rgba(150,180,230,0.18);box-shadow:0 40px 90px -30px rgba(0,0,0,0.8), 0 0 70px -20px color-mix(in srgb,var(--ac) 45%,transparent)">
+          <img src="{% static 'landing/hero-night.jpg' %}" alt="Painel de LED da Innova LED iluminado à noite" style="display:block;width:100%;height:560px;object-fit:cover">
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(6,8,15,0.85));pointer-events:none"></div>
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,0) 0 2px,rgba(0,0,0,0.10) 2px 3px);mix-blend-mode:overlay;pointer-events:none"></div>
+          <div style="position:absolute;left:18px;top:18px;display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:rgba(6,8,15,0.7);backdrop-filter:blur(6px);border:1px solid color-mix(in srgb,var(--ac) 35%,transparent);font:600 12px/1 'Space Grotesk';letter-spacing:.06em;color:var(--ac)">
+            <span style="width:7px;height:7px;border-radius:50%;background:#ff5a5a;box-shadow:0 0 8px #ff5a5a;animation:ilBlink 1.4s infinite"></span> INSTALAÇÃO REAL
+          </div>
+          <div style="position:absolute;left:20px;bottom:18px;right:20px">
+            <div style="font:600 16px/1.2 'Space Grotesk'">Brilha de dia e de noite</div>
+            <div style="font-size:13px;color:#A7B2C6;margin-top:4px">Painel digital em ponto de alto fluxo</div>
+          </div>
+        </div>
+        <div style="position:absolute;right:-16px;bottom:-22px;display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:16px;background:rgba(11,16,28,0.92);backdrop-filter:blur(8px);border:1px solid rgba(150,180,230,0.16);box-shadow:0 20px 50px -20px rgba(0,0,0,0.9)">
+          <div style="width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:color-mix(in srgb,var(--ac) 16%,transparent);color:var(--ac)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+          </div>
+          <div>
+            <div style="font:700 15px/1 'Space Grotesk'">24/7 no ar</div>
+            <div style="font-size:12px;color:#93A0B7;margin-top:3px">Telas sempre funcionando</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MARQUEE -->
+    <div style="position:relative;border-top:1px solid rgba(130,165,220,0.10);border-bottom:1px solid rgba(130,165,220,0.10);background:rgba(8,11,20,0.6);overflow:hidden;padding:16px 0">
+      <div style="display:flex;width:max-content;animation:ilMarquee 32s linear infinite;will-change:transform" aria-hidden="true">
+        <div style="display:flex;align-items:center;gap:30px;padding-right:30px;font:600 15px/1 'Space Grotesk';letter-spacing:.1em;text-transform:uppercase;color:#7C8AA3">
+          <span>Venda</span><span style="color:var(--ac)">◆</span><span>Locação</span><span style="color:var(--ac)">◆</span><span>Manutenção</span><span style="color:var(--ac)">◆</span><span>Publicidade</span><span style="color:var(--ac)">◆</span><span>Indoor</span><span style="color:var(--ac)">◆</span><span>Outdoor</span><span style="color:var(--ac)">◆</span><span>Cenografia</span><span style="color:var(--ac)">◆</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:30px;padding-right:30px;font:600 15px/1 'Space Grotesk';letter-spacing:.1em;text-transform:uppercase;color:#7C8AA3">
+          <span>Venda</span><span style="color:var(--ac)">◆</span><span>Locação</span><span style="color:var(--ac)">◆</span><span>Manutenção</span><span style="color:var(--ac)">◆</span><span>Publicidade</span><span style="color:var(--ac)">◆</span><span>Indoor</span><span style="color:var(--ac)">◆</span><span>Outdoor</span><span style="color:var(--ac)">◆</span><span>Cenografia</span><span style="color:var(--ac)">◆</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVIÇOS -->
+  <section id="servicos" style="position:relative;padding:104px 0">
+    <div style="max-width:1200px;margin:0 auto;padding:0 24px">
+      <div class="reveal" style="max-width:680px">
+        <div style="font:600 12px/1 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:var(--ac)">O que fazemos</div>
+        <h2 style="font:600 clamp(30px,4.2vw,46px)/1.05 'Space Grotesk';letter-spacing:-0.02em;margin:16px 0 0">Soluções completas em painéis de LED</h2>
+        <p style="margin:16px 0 0;font-size:17px;line-height:1.6;color:#A7B2C6">Do equipamento à mídia: cuidamos de tudo para a sua marca aparecer com nitidez e impacto.</p>
+      </div>
+
+      <div class="cards-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:48px">
+
+        <div class="reveal service-card" style="position:relative;border:1px solid rgba(130,165,220,0.12);border-radius:20px;background:linear-gradient(180deg,rgba(18,26,44,0.9),rgba(9,14,26,0.9));padding:28px;overflow:hidden">
+          <div style="width:50px;height:50px;border-radius:13px;display:grid;place-items:center;background:color-mix(in srgb,var(--ac) 14%,transparent);color:var(--ac);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ac) 25%,transparent)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l1-5h16l1 5"></path><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"></path><path d="M9 13h6"></path></svg>
+          </div>
+          <h3 style="font:600 19px/1.2 'Space Grotesk';margin:20px 0 0">Venda</h3>
+          <div style="font:600 12px/1 'Space Grotesk';letter-spacing:.04em;color:var(--ac);margin-top:6px">Painéis sob medida</div>
+          <p style="margin:12px 0 0;font-size:14.5px;line-height:1.55;color:#9AA6BC">Painéis indoor e outdoor configurados para o seu espaço, com instalação e suporte completo.</p>
+        </div>
+
+        <div class="reveal service-card" style="position:relative;border:1px solid rgba(130,165,220,0.12);border-radius:20px;background:linear-gradient(180deg,rgba(18,26,44,0.9),rgba(9,14,26,0.9));padding:28px;overflow:hidden">
+          <div style="width:50px;height:50px;border-radius:13px;display:grid;place-items:center;background:color-mix(in srgb,var(--ac) 14%,transparent);color:var(--ac);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ac) 25%,transparent)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><path d="M3.27 6.96 12 12.01l8.73-5.05"></path><path d="M12 22.08V12"></path></svg>
+          </div>
+          <h3 style="font:600 19px/1.2 'Space Grotesk';margin:20px 0 0">Locação</h3>
+          <div style="font:600 12px/1 'Space Grotesk';letter-spacing:.04em;color:var(--ac);margin-top:6px">Para o seu evento</div>
+          <p style="margin:12px 0 0;font-size:14.5px;line-height:1.55;color:#9AA6BC">Aluguel de painéis de alta definição para eventos, shows e ativações, com equipe técnica inclusa.</p>
+        </div>
+
+        <div class="reveal service-card" style="position:relative;border:1px solid rgba(130,165,220,0.12);border-radius:20px;background:linear-gradient(180deg,rgba(18,26,44,0.9),rgba(9,14,26,0.9));padding:28px;overflow:hidden">
+          <div style="width:50px;height:50px;border-radius:13px;display:grid;place-items:center;background:color-mix(in srgb,var(--ac) 14%,transparent);color:var(--ac);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ac) 25%,transparent)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+          </div>
+          <h3 style="font:600 19px/1.2 'Space Grotesk';margin:20px 0 0">Manutenção</h3>
+          <div style="font:600 12px/1 'Space Grotesk';letter-spacing:.04em;color:var(--ac);margin-top:6px">Sempre no ar</div>
+          <p style="margin:12px 0 0;font-size:14.5px;line-height:1.55;color:#9AA6BC">Manutenção, configuração e reparo de painéis para manter a sua tela funcionando perfeitamente.</p>
+        </div>
+
+        <div class="reveal service-card service-card-highlight" style="position:relative;border:1px solid color-mix(in srgb,var(--ac) 30%,transparent);border-radius:20px;background:linear-gradient(180deg,color-mix(in srgb,var(--ac) 12%,#0c1322),rgba(9,14,26,0.95));padding:28px;overflow:hidden">
+          <div style="position:absolute;top:14px;right:14px;font:700 10px/1 'Space Grotesk';letter-spacing:.1em;color:#04141a;background:var(--ac);padding:5px 9px;border-radius:999px">DESTAQUE</div>
+          <div style="width:50px;height:50px;border-radius:13px;display:grid;place-items:center;background:var(--ac);color:#04141a;box-shadow:0 0 26px color-mix(in srgb,var(--ac) 60%,transparent)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg>
+          </div>
+          <h3 style="font:600 19px/1.2 'Space Grotesk';margin:20px 0 0">Publicidade</h3>
+          <div style="font:600 12px/1 'Space Grotesk';letter-spacing:.04em;color:var(--ac);margin-top:6px">Mídia em pontos estratégicos</div>
+          <p style="margin:12px 0 0;font-size:14.5px;line-height:1.55;color:#C4CEDF">Anuncie nos nossos painéis próprios em locais de alto fluxo. Sua marca vista por milhares todos os dias.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- INDOOR x OUTDOOR -->
+  <section id="paineis" style="position:relative;padding:60px 0 104px">
+    <div style="max-width:1200px;margin:0 auto;padding:0 24px">
+      <div class="reveal" style="max-width:680px">
+        <div style="font:600 12px/1 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:var(--ac)">Tecnologia</div>
+        <h2 style="font:600 clamp(30px,4.2vw,46px)/1.05 'Space Grotesk';letter-spacing:-0.02em;margin:16px 0 0">Indoor ou outdoor, a tela certa para cada cenário</h2>
+      </div>
+
+      <div class="panels-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:44px">
+        <div class="reveal" style="position:relative;border:1px solid rgba(130,165,220,0.12);border-radius:22px;overflow:hidden;background:linear-gradient(180deg,rgba(18,26,44,0.9),rgba(9,14,26,0.95))">
+          <div style="height:200px;position:relative;background:radial-gradient(120% 120% at 30% 10%, color-mix(in srgb,var(--ac) 28%,#0a1020), #0a0f1c);overflow:hidden">
+            <div style="position:absolute;inset:0;background-image:radial-gradient(circle, rgba(25,227,245,0.55) 1px, transparent 1.4px);background-size:14px 14px;opacity:.5"></div>
+            <div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ac) 50%,transparent),transparent);width:40%;height:160%;top:-30%;filter:blur(8px);animation:ilScan 4s linear infinite"></div>
+          </div>
+          <div style="padding:26px">
+            <h3 style="font:600 22px/1.1 'Space Grotesk'">Indoor</h3>
+            <p style="margin:10px 0 16px;font-size:15px;line-height:1.55;color:#9AA6BC">Alta densidade de pixels e cor precisa, ideal para curta distância: lojas, recepções, estúdios e palcos.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <span style="font-size:12.5px;color:#C4CEDF;border:1px solid rgba(150,170,210,0.2);padding:6px 11px;border-radius:999px">Pixel pitch fino</span>
+              <span style="font-size:12.5px;color:#C4CEDF;border:1px solid rgba(150,170,210,0.2);padding:6px 11px;border-radius:999px">Cor calibrada</span>
+              <span style="font-size:12.5px;color:#C4CEDF;border:1px solid rgba(150,170,210,0.2);padding:6px 11px;border-radius:999px">PDV &amp; palco</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal" style="position:relative;border:1px solid rgba(130,165,220,0.12);border-radius:22px;overflow:hidden;background:linear-gradient(180deg,rgba(18,26,44,0.9),rgba(9,14,26,0.95))">
+          <div style="height:200px;position:relative;overflow:hidden">
+            <img src="{% static 'landing/panel-outdoor-totem.jpg' %}" alt="Painel outdoor" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 28%">
+            <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,8,15,0.1),rgba(9,14,26,0.85))"></div>
+            <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,0) 0 2px,rgba(0,0,0,0.12) 2px 3px);mix-blend-mode:overlay"></div>
+          </div>
+          <div style="padding:26px">
+            <h3 style="font:600 22px/1.1 'Space Grotesk'">Outdoor</h3>
+            <p style="margin:10px 0 16px;font-size:15px;line-height:1.55;color:#9AA6BC">Alto brilho à prova de tempo, visível sob luz do sol. Para fachadas, totens, vias e grandes públicos.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <span style="font-size:12.5px;color:#C4CEDF;border:1px solid rgba(150,170,210,0.2);padding:6px 11px;border-radius:999px">Alto brilho</span>
+              <span style="font-size:12.5px;color:#C4CEDF;border:1px solid rgba(150,170,210,0.2);padding:6px 11px;border-radius:999px">À prova de tempo</span>
+              <span style="font-size:12.5px;color:#C4CEDF;border:1px solid rgba(150,170,210,0.2);padding:6px 11px;border-radius:999px">Fachadas &amp; totens</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CASOS DE USO -->
+  <section id="casos" style="position:relative;padding:60px 0 104px">
+    <div style="max-width:1200px;margin:0 auto;padding:0 24px">
+      <div class="reveal" style="max-width:680px">
+        <div style="font:600 12px/1 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:var(--ac)">Onde brilhamos</div>
+        <h2 style="font:600 clamp(30px,4.2vw,46px)/1.05 'Space Grotesk';letter-spacing:-0.02em;margin:16px 0 0">Casos de uso</h2>
+      </div>
+
+      <div class="bento-grid" style="display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:200px;gap:16px;margin-top:44px">
+
+        <a id="bento-wa" href="#" target="_blank" rel="noopener" class="reveal bento-featured" style="grid-column:span 2;grid-row:span 2;position:relative;border-radius:20px;overflow:hidden;border:1px solid rgba(130,165,220,0.14);display:block">
+          <img src="{% static 'landing/panel-night-wide.jpg' %}" alt="Publicidade outdoor da Innova LED à noite" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,8,15,0.1) 30%,rgba(6,8,15,0.92))"></div>
+          <div style="position:absolute;left:24px;bottom:22px;right:24px">
+            <div style="font:600 12px/1 'Space Grotesk';letter-spacing:.12em;text-transform:uppercase;color:var(--ac)">Mídia própria</div>
+            <div style="font:600 26px/1.1 'Space Grotesk';margin-top:8px">Publicidade Outdoor</div>
+            <p style="margin:8px 0 0;font-size:14px;color:#C4CEDF;max-width:420px">Painéis em pontos de alto fluxo, prontos para exibir a sua marca para milhares de pessoas por dia.</p>
+          </div>
+        </a>
+
+        <div class="reveal bento-card" style="position:relative;border-radius:20px;overflow:hidden;border:1px solid rgba(130,165,220,0.12);background:linear-gradient(150deg,#141d31,#0a0f1c);padding:22px;display:flex;flex-direction:column;justify-content:space-between">
+          <div style="color:var(--ac)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></div>
+          <div><div style="font:600 18px/1.1 'Space Grotesk'">Eventos &amp; Shows</div><p style="margin:6px 0 0;font-size:13px;color:#93A0B7">Telões e ativações de palco.</p></div>
+        </div>
+
+        <div class="reveal bento-card" style="position:relative;border-radius:20px;overflow:hidden;border:1px solid rgba(130,165,220,0.12);background:linear-gradient(150deg,#141d31,#0a0f1c);padding:22px;display:flex;flex-direction:column;justify-content:space-between">
+          <div style="color:var(--ac)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7h20l-2 4H4z"></path><path d="M4 11v9h16v-9"></path><path d="M9 20v-5h6v5"></path></svg></div>
+          <div><div style="font:600 18px/1.1 'Space Grotesk'">Varejo &amp; PDV</div><p style="margin:6px 0 0;font-size:13px;color:#93A0B7">Vitrines e comunicação na loja.</p></div>
+        </div>
+
+        <div class="reveal bento-card" style="position:relative;border-radius:20px;overflow:hidden;border:1px solid rgba(130,165,220,0.12);background:linear-gradient(150deg,#141d31,#0a0f1c);padding:22px;display:flex;flex-direction:column;justify-content:space-between">
+          <div style="color:var(--ac)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path><path d="M9 9v.01M9 12v.01M9 15v.01"></path></svg></div>
+          <div><div style="font:600 18px/1.1 'Space Grotesk'">Feiras &amp; Expos</div><p style="margin:6px 0 0;font-size:13px;color:#93A0B7">Estandes que chamam atenção.</p></div>
+        </div>
+
+        <div class="reveal bento-card" style="position:relative;border-radius:20px;overflow:hidden;border:1px solid rgba(130,165,220,0.12);background:linear-gradient(150deg,#141d31,#0a0f1c);padding:22px;display:flex;flex-direction:column;justify-content:space-between">
+          <div style="color:var(--ac)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M9 22V12h6v10"></path></svg></div>
+          <div><div style="font:600 18px/1.1 'Space Grotesk'">Shoppings</div><p style="margin:6px 0 0;font-size:13px;color:#93A0B7">Mídia em corredores de fluxo.</p></div>
+        </div>
+
+        <div class="reveal bento-card" style="position:relative;border-radius:20px;overflow:hidden;border:1px solid rgba(130,165,220,0.12);background:linear-gradient(150deg,#141d31,#0a0f1c);padding:22px;display:flex;flex-direction:column;justify-content:space-between">
+          <div style="color:var(--ac)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 1.9 5.8H20l-4.9 3.6 1.9 5.8L12 14.6 7 18.2l1.9-5.8L4 8.8h6.1z"></path></svg></div>
+          <div><div style="font:600 18px/1.1 'Space Grotesk'">Cenografia</div><p style="margin:6px 0 0;font-size:13px;color:#93A0B7">Painéis para sets e palcos.</p></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- DIFERENCIAIS -->
+  <section id="diferenciais" style="position:relative;padding:60px 0 104px">
+    <div style="max-width:1200px;margin:0 auto;padding:0 24px">
+      <div class="diff-grid" style="display:grid;grid-template-columns:0.85fr 1.15fr;gap:56px;align-items:start">
+        <div class="reveal diff-sticky" style="position:sticky;top:96px">
+          <div style="font:600 12px/1 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:var(--ac)">Por que a Innova LED</div>
+          <h2 style="font:600 clamp(30px,4.2vw,46px)/1.05 'Space Grotesk';letter-spacing:-0.02em;margin:16px 0 0">Tecnologia, agilidade e impacto de verdade</h2>
+          <p style="margin:16px 0 28px;font-size:16px;line-height:1.6;color:#A7B2C6">Cuidamos do equipamento à mídia para que a sua marca apareça com nitidez, brilho e no lugar certo.</p>
+          <a id="diff-wa" href="#" target="_blank" rel="noopener" class="cta-primary" style="display:inline-flex;align-items:center;gap:10px;background:var(--ac);color:#04141a;font:700 14px/1 'Manrope';padding:14px 20px;border-radius:999px;box-shadow:0 0 34px color-mix(in srgb,var(--ac) 45%,transparent)">Fale com a gente →</a>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="reveal diff-card" style="border:1px solid rgba(130,165,220,0.12);border-radius:18px;background:rgba(13,19,33,0.7);padding:24px">
+            <div style="font:700 13px/1 'Space Grotesk';color:var(--ac)">01</div>
+            <div style="font:600 17px/1.2 'Space Grotesk';margin-top:14px">Tecnologia de ponta</div>
+            <p style="margin:8px 0 0;font-size:14px;line-height:1.55;color:#93A0B7">Painéis de alta resolução e brilho, com imagem nítida em qualquer ambiente.</p>
+          </div>
+          <div class="reveal diff-card" style="border:1px solid rgba(130,165,220,0.12);border-radius:18px;background:rgba(13,19,33,0.7);padding:24px">
+            <div style="font:700 13px/1 'Space Grotesk';color:var(--ac)">02</div>
+            <div style="font:600 17px/1.2 'Space Grotesk';margin-top:14px">Montagem rápida</div>
+            <p style="margin:8px 0 0;font-size:14px;line-height:1.55;color:#93A0B7">Equipe ágil que instala e configura tudo no prazo do seu evento ou loja.</p>
+          </div>
+          <div class="reveal diff-card" style="border:1px solid rgba(130,165,220,0.12);border-radius:18px;background:rgba(13,19,33,0.7);padding:24px">
+            <div style="font:700 13px/1 'Space Grotesk';color:var(--ac)">03</div>
+            <div style="font:600 17px/1.2 'Space Grotesk';margin-top:14px">Alto impacto visual</div>
+            <p style="margin:8px 0 0;font-size:14px;line-height:1.55;color:#93A0B7">Telas que prendem o olhar e fazem a sua marca ser lembrada.</p>
+          </div>
+          <div class="reveal diff-card" style="border:1px solid rgba(130,165,220,0.12);border-radius:18px;background:rgba(13,19,33,0.7);padding:24px">
+            <div style="font:700 13px/1 'Space Grotesk';color:var(--ac)">04</div>
+            <div style="font:600 17px/1.2 'Space Grotesk';margin-top:14px">Pontos estratégicos</div>
+            <p style="margin:8px 0 0;font-size:14px;line-height:1.55;color:#93A0B7">Painéis próprios em locais de alto fluxo para a sua publicidade.</p>
+          </div>
+          <div class="reveal diff-card" style="border:1px solid rgba(130,165,220,0.12);border-radius:18px;background:rgba(13,19,33,0.7);padding:24px">
+            <div style="font:700 13px/1 'Space Grotesk';color:var(--ac)">05</div>
+            <div style="font:600 17px/1.2 'Space Grotesk';margin-top:14px">Equipe especializada</div>
+            <p style="margin:8px 0 0;font-size:14px;line-height:1.55;color:#93A0B7">Suporte técnico que acompanha a sua tela do projeto à operação.</p>
+          </div>
+          <div class="reveal diff-card" style="border:1px solid rgba(130,165,220,0.12);border-radius:18px;background:rgba(13,19,33,0.7);padding:24px">
+            <div style="font:700 13px/1 'Space Grotesk';color:var(--ac)">06</div>
+            <div style="font:600 17px/1.2 'Space Grotesk';margin-top:14px">Atendimento próximo</div>
+            <p style="margin:8px 0 0;font-size:14px;line-height:1.55;color:#93A0B7">Conversa direta no WhatsApp e solução sob medida para o seu objetivo.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTATO -->
+  <section id="contato" style="position:relative;padding:60px 0 104px">
+    <div style="max-width:640px;margin:0 auto;padding:0 24px;text-align:center">
+      <div class="reveal" style="position:relative;border:1px solid color-mix(in srgb,var(--ac) 22%,transparent);border-radius:26px;overflow:hidden;background:linear-gradient(180deg,rgba(14,21,38,0.95),rgba(8,12,22,0.97));box-shadow:0 50px 120px -40px rgba(0,0,0,0.9);padding:56px 44px">
+        <div style="position:absolute;inset:0;background-image:radial-gradient(circle, rgba(25,227,245,0.4) 1px, transparent 1.4px);background-size:18px 18px;opacity:.12;pointer-events:none"></div>
+        <div style="position:relative">
+          <div style="font:600 12px/1 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:var(--ac)">Vamos conversar</div>
+          <h2 style="font:600 clamp(28px,3.4vw,38px)/1.08 'Space Grotesk';letter-spacing:-0.02em;margin:14px 0 0">Peça o seu orçamento</h2>
+          <p style="margin:14px auto 32px;max-width:420px;font-size:15.5px;line-height:1.6;color:#A7B2C6">Fale com a gente agora pelo WhatsApp e receba a melhor solução em painéis de LED para o seu projeto.</p>
+          <a id="contact-wa" href="#" target="_blank" rel="noopener" class="cta-primary" style="display:inline-flex;align-items:center;gap:12px;background:var(--ac);color:#04141a;font:700 16px/1 'Manrope';padding:18px 30px;border-radius:999px;box-shadow:0 0 40px color-mix(in srgb,var(--ac) 70%,transparent)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.06 24l1.68-6.13A11.86 11.86 0 0 1 .16 11.9C.16 5.34 5.5 0 12.06 0a11.82 11.82 0 0 1 8.42 3.49 11.82 11.82 0 0 1 3.48 8.42c0 6.56-5.34 11.9-11.9 11.9a11.9 11.9 0 0 1-5.69-1.45L.06 24z"></path></svg>
+            Falar no WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="position:relative;border-top:1px solid rgba(130,165,220,0.10);background:#05070D">
+    <div class="footer-grid" style="max-width:1200px;margin:0 auto;padding:56px 24px 32px;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px">
+      <div>
+        <img src="{% static 'landing/logo-white.png' %}" alt="Innova LED" style="height:36px;width:auto;display:block">
+        <p style="margin:18px 0 0;max-width:320px;font-size:14px;line-height:1.6;color:#8B97AE">Inovando a forma de divulgar a sua empresa. Soluções completas em painéis de LED — venda, locação, manutenção e publicidade.</p>
+      </div>
+      <div>
+        <div style="font:600 13px/1 'Space Grotesk';letter-spacing:.06em;color:#fff;text-transform:uppercase">Navegação</div>
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:16px;font-size:14px;color:#8B97AE">
+          <a href="#servicos" style="transition:color .2s">Serviços</a>
+          <a href="#paineis" style="transition:color .2s">Painéis</a>
+          <a href="#casos" style="transition:color .2s">Casos de uso</a>
+          <a href="#diferenciais" style="transition:color .2s">Diferenciais</a>
+        </div>
+      </div>
+      <div>
+        <div style="font:600 13px/1 'Space Grotesk';letter-spacing:.06em;color:#fff;text-transform:uppercase">Contato</div>
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:16px;font-size:14px;color:#8B97AE">
+          <a id="footer-wa" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;transition:color .2s">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.06 24l1.68-6.13A11.86 11.86 0 0 1 .16 11.9C.16 5.34 5.5 0 12.06 0a11.82 11.82 0 0 1 8.42 3.49 11.82 11.82 0 0 1 3.48 8.42c0 6.56-5.34 11.9-11.9 11.9a11.9 11.9 0 0 1-5.69-1.45L.06 24z"></path></svg>
+            (51) 99546-3104
+          </a>
+          <a href="#contato" style="transition:color .2s">Pedir orçamento</a>
+          <span style="display:inline-flex;align-items:center;gap:8px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor"></circle></svg>
+            @innovaled
+          </span>
+        </div>
+      </div>
+    </div>
+    <div style="max-width:1200px;margin:0 auto;padding:22px 24px 36px;border-top:1px solid rgba(130,165,220,0.08);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:12.5px;color:#5E6B82">
+      <span>© 2026 Innova LED. Todos os direitos reservados.</span>
+      <span>Painéis de LED · Indoor &amp; Outdoor</span>
+      <a href="https://costatech.dev" target="_blank" rel="noopener" style="color:#5E6B82;transition:color .2s">Desenvolvido por <span style="color:#8B97AE;font-weight:600">costatech.dev</span></a>
+    </div>
+  </footer>
+
+  <!-- FLOATING WHATSAPP -->
+  <a id="float-wa" href="#" target="_blank" rel="noopener" class="wa-float" style="position:fixed;right:22px;bottom:22px;z-index:60;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#25D366;color:#fff;box-shadow:0 12px 30px -8px rgba(37,211,102,0.7)" aria-label="Chamar no WhatsApp">
+    <span style="position:absolute;inset:0;border-radius:50%;background:#25D366;opacity:.45;animation:ilPulse 2s ease-out infinite;z-index:-1"></span>
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.06 24l1.68-6.13A11.86 11.86 0 0 1 .16 11.9C.16 5.34 5.5 0 12.06 0a11.82 11.82 0 0 1 8.42 3.49 11.82 11.82 0 0 1 3.48 8.42c0 6.56-5.34 11.9-11.9 11.9a11.9 11.9 0 0 1-5.69-1.45L.06 24zM6.6 20.2c1.68.99 3.29 1.59 5.45 1.59 5.45 0 9.89-4.43 9.89-9.88 0-2.64-1.03-5.12-2.9-6.99a9.82 9.82 0 0 0-6.98-2.9c-5.46 0-9.9 4.44-9.9 9.89 0 2.27.71 3.97 1.74 5.5l-.99 3.62 3.69-.83zM17.9 14.7c-.07-.12-.27-.19-.56-.34-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.21-.24-.58-.49-.5-.67-.51l-.57-.01z"></path></svg>
+  </a>
+
+</div>
+
+<script>
+(function () {
+  const WA_NUMBER = '5551995463104';
+  const DEFAULT_MSG = encodeURIComponent('Olá Innova LED! Gostaria de saber mais sobre os painéis de LED.');
+  const baseWaUrl = 'https://wa.me/' + WA_NUMBER;
+  const defaultWaUrl = baseWaUrl + '?text=' + DEFAULT_MSG;
+
+  // Wire default WA links
+  ['nav-wa', 'hero-wa', 'bento-wa', 'diff-wa', 'contact-wa', 'footer-wa', 'float-wa'].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) el.href = defaultWaUrl;
+  });
+
+  // LED canvas animation
+  (function () {
+    const cv = document.getElementById('led-canvas');
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.6);
+    const gap = 24, rad = 1.9;
+    let w = 0, h = 0, raf;
+
+    function resize() {
+      const rect = cv.getBoundingClientRect();
+      w = rect.width;
+      h = Math.max(rect.height, 1);
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const t0 = performance.now();
+    function draw(now) {
+      const t = (now - t0) / 1000;
+      ctx.clearRect(0, 0, w, h);
+      const cols = Math.ceil(w / gap), rows = Math.ceil(h / gap);
+      for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+          const x = i * gap + gap / 2, y = j * gap + gap / 2;
+          const wv = Math.sin(i * 0.36 + j * 0.22 - t * 1.3) * 0.5 + 0.5;
+          let b = 0.05 + 0.07 * wv;
+          const band = Math.sin((i + j) * 0.5 - t * 2.1);
+          if (band > 0.62) b += (band - 0.62) * 1.9;
+          ctx.beginPath();
+          ctx.arc(x, y, rad, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(120,145,180,0.10)';
+          ctx.fill();
+          if (b > 0.13) {
+            const bright = Math.min(0.95, b);
+            ctx.beginPath();
+            ctx.arc(x, y, rad + (b > 0.5 ? 0.9 : 0), 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(40,224,255,' + bright + ')';
+            if (b > 0.5) { ctx.shadowColor = 'rgba(40,224,255,0.85)'; ctx.shadowBlur = 8; }
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+        }
+      }
+      raf = requestAnimationFrame(draw);
+    }
+    raf = requestAnimationFrame(draw);
+  })();
+
+  // Scroll reveal
+  (function () {
+    const els = Array.from(document.querySelectorAll('.reveal'));
+    if (!('IntersectionObserver' in window)) {
+      els.forEach(function (el) { el.classList.add('visible'); });
+      return;
+    }
+    const io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+    els.forEach(function (el) { io.observe(el); });
+  })();
+
+})();
+</script>
+</body>
+</html>

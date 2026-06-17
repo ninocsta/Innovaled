@@ -3,8 +3,13 @@ from django.contrib.auth import views as auth_views
 from django.http import FileResponse, HttpResponseForbidden
 from django.conf import settings
 from django.shortcuts import get_object_or_404
+from django.views.generic import TemplateView
 import os
 from core.models import Contrato, DocumentoContrato
+
+
+class LandingView(TemplateView):
+    template_name = 'landing.html'
 
 
 class CustomLoginView(auth_views.LoginView):
