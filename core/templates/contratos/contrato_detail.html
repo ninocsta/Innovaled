@@ -90,6 +90,7 @@
                     <p><strong>Vendedor:</strong> {{ contrato.vendedor|default:"-" }}</p>
                     <p><strong>Observações:</strong> {{ contrato.observacoes|default:"Nenhuma" }}</p>
                     <p><strong>Vencimento:</strong> {{ contrato.data_vencimento_contrato|date:"d/m/Y" }}</p>
+                    <p><strong>Vencimento 1ª Parcela:</strong> {{ contrato.data_vencimento_primeira_parcela|date:"d/m/Y"|default:"-" }}</p>
                 </div>
             </div>
         </div>
