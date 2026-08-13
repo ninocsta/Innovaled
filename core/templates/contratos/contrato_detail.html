@@ -15,7 +15,7 @@
     <div class="alert alert-warning">⚠️ Pendência de cobrança.</div>
     {% elif tem_pagamento_pendente %}
     <div class="alert alert-warning">⚠️ Pendência de pagamento.</div>
-    {% elif contrato.primeiro_pagamento and tem_video_pendente %}
+    {% elif tem_pagamento and tem_video_pendente %}
     <div class="alert alert-warning">⚠️ Pendência de vídeo.</div>
     {% else %}
     <div class="alert alert-success">✔ Sem pendências.</div>
@@ -90,6 +90,9 @@
                     <p><strong>Vendedor:</strong> {{ contrato.vendedor|default:"-" }}</p>
                     <p><strong>Observações:</strong> {{ contrato.observacoes|default:"Nenhuma" }}</p>
                     <p><strong>Vencimento:</strong> {{ contrato.data_vencimento_contrato|date:"d/m/Y" }}</p>
+                    {% if contrato.data_cancelamento_contrato %}
+                    <p><strong>Data de Cancelamento:</strong> {{ contrato.data_cancelamento_contrato|date:"d/m/Y" }}</p>
+                    {% endif %}
                     <p><strong>Vencimento 1ª Parcela:</strong> {{ contrato.data_vencimento_primeira_parcela|date:"d/m/Y"|default:"-" }}</p>
                 </div>
             </div>
@@ -194,47 +197,16 @@
                             {% endif %}
                             </p>
 
-                            {% if contrato.cobranca_gerada %}
-                            <!-- Primeiro pagamento -->
-                            <p>
-                                <strong>Primeiro pagamento:</strong>
-                                {% if contrato.primeiro_pagamento %}
-                                ✅ Pago em {{ contrato.primeiro_pagamento }}
-                                {% else %}
-                                <span class="text-danger">🚨 Pendente</span>
-                            <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 1 %}"
-                                class="d-flex mt-2">
-                                {% csrf_token %}
-                                <input type="hidden" name="from_detail" value="1">
-                                <input type="date" name="data_pagamento" class="form-control form-control-sm me-2">
-                                <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
-                            </form>
-                            {% endif %}
+                            <p class="mb-0">
+                                <strong>Parcelas:</strong>
+                                <a href="#parcelas" class="text-light">ver abaixo</a>
                             </p>
-
-                            <!-- Segundo pagamento -->
-                            <p>
-                                <strong>Segundo pagamento:</strong>
-                                {% if contrato.segundo_pagamento %}
-                                ✅ Pago em {{ contrato.segundo_pagamento }}
-                                {% else %}
-                                <span class="text-danger">🚨 Pendente</span>
-                            <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 2 %}"
-                                class="d-flex mt-2">
-                                {% csrf_token %}
-                                <input type="hidden" name="from_detail" value="1">
-                                <input type="date" name="data_pagamento" class="form-control form-control-sm me-2">
-                                <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
-                            </form>
-                            {% endif %}
-                            </p>
-                            {% endif %}
                         </div>
 
                         <!-- Pendências de Vídeo -->
                         <div class="col-md-6">
                             <h5 class="card-title">📺 Pendências de Vídeo</h5>
-                            {% if contrato.primeiro_pagamento %}
+                            {% if tem_pagamento %}
                             {% if videos_pendentes.exists %}
                             <p class="text-danger">🚨 {{ videos_pendentes.count }} vídeo(s) OFF</p>
                             <ul class="list-unstyled">
@@ -403,8 +375,7 @@
                                         <i class="bi bi-calendar-event me-1"></i>{{ reg.data_hora|date:"d/m/Y H:i" }}
                                     </strong>
                                     <p class="mb-1">{{ reg.observacao }}</p>
-                                    <small class="text-muted"><i class="bi bi-person-circle me-1"></i>Registrado por {{
-                                        reg.created_by }}</small>
+                                    <small class="text-muted"><i class="bi bi-person-circle me-1"></i>Registrado por {{ reg.created_by|default:"sistema" }}</small>
                                 </div>
                             </div>
                         </li>
@@ -417,6 +388,22 @@
             </div>
         </div>
     </div>
+
+    <!-- Parcelas -->
+    {% with resumo=contrato.resumo_parcelas %}
+    <div class="card bg-dark text-light my-4 shadow-sm" id="parcelas">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0">💳 Parcelas</h5>
+            <span class="small text-muted">
+                {{ resumo.pagas }}/{{ resumo.total }} pagas
+                {% if resumo.vencidas %}· <span class="text-danger">{{ resumo.vencidas }} vencida(s)</span>{% endif %}
+            </span>
+        </div>
+        <div class="card-body p-2">
+            {% include "partials/_parcelas.html" with parcelas=parcelas from_detail=1 %}
+        </div>
+    </div>
+    {% endwith %}
 
     <!-- Modal para adicionar registro -->
     <div class="modal fade" id="registroModal" tabindex="-1" aria-labelledby="registroModalLabel" aria-hidden="true">

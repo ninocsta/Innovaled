@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Contrato, Cliente, Banco, Vendedor, Video, Local, FormaPagamento, StatusContrato, Registro, DocumentoContrato
+from .models import Contrato, Cliente, Banco, Vendedor, Video, Local, FormaPagamento, StatusContrato, Registro, DocumentoContrato, Parcela
 
 
 class BaseAuditAdmin(admin.ModelAdmin):
@@ -24,6 +24,14 @@ class ContratoAdmin(BaseAuditAdmin):
     def id_formatado(self, obj):
         return f"{obj.id_contrato:05d}"
     id_formatado.short_description = "ID"
+
+
+@admin.register(Parcela)
+class ParcelaAdmin(BaseAuditAdmin):
+    list_display = ("contrato", "ciclo", "numero", "vencimento", "pago_em", "situacao")
+    list_filter = ("ciclo", "vencimento", "pago_em")
+    search_fields = ("contrato__id_contrato", "contrato__cliente__razao_social")
+    readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
 
 
 @admin.register(Cliente)

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from dateutil.relativedelta import relativedelta
 import datetime
 import os
 import re
@@ -124,9 +125,6 @@ class Contrato(BaseAudit):
     id_contrato = models.AutoField(primary_key=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name="contratos")
 
-    primeiro_pagamento = models.DateField(blank=True, null=True)
-    segundo_pagamento = models.DateField(blank=True, null=True)
-
     banco = models.ForeignKey(Banco, on_delete=models.SET_NULL, null=True, blank=True)
     cobranca_gerada = models.BooleanField(default=False)
 
@@ -160,10 +158,83 @@ class Contrato(BaseAudit):
         if self.valor_mensalidade and self.vigencia_meses:
             return self.valor_mensalidade * self.vigencia_meses
         return 0
-    
+
+    @property
+    def resumo_parcelas(self):
+        """Contagem de parcelas pagas/vencidas. Usa o prefetch quando houver."""
+        parcelas = list(self.parcelas.all())
+        return {
+            "total": len(parcelas),
+            "pagas": sum(1 for p in parcelas if p.pago_em),
+            "vencidas": sum(1 for p in parcelas if p.situacao == "vencido"),
+            "ultimo_pagamento": max((p.pago_em for p in parcelas if p.pago_em), default=None),
+        }
+
 
     class Meta:
         ordering = ["-data_assinatura", "-id_contrato"]
+
+
+class Parcela(BaseAudit):
+    """Parcela mensal do contrato. Sem valor: controle é só vencimento + pagamento."""
+    contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name="parcelas")
+    ciclo = models.PositiveSmallIntegerField(default=1)  # 1 = contrato original, 2+ = renovações
+    numero = models.PositiveSmallIntegerField()
+    vencimento = models.DateField()
+    pago_em = models.DateField(blank=True, null=True)
+
+    @property
+    def situacao(self):
+        if self.pago_em:
+            return "pago"
+        if self.vencimento < datetime.date.today():
+            return "vencido"
+        return "a_vencer"
+
+    def __str__(self):
+        return f"Parcela {self.numero} ({self.vencimento:%d/%m/%Y}) - Contrato {self.contrato_id:05d}"
+
+    class Meta:
+        ordering = ["ciclo", "numero"]
+        unique_together = ("contrato", "ciclo", "numero")
+        verbose_name_plural = "Parcelas"
+
+
+def gerar_parcelas(contrato, inicio, quantidade, ciclo=1, user=None):
+    """Cria `quantidade` parcelas mensais a partir de `inicio`."""
+    return Parcela.objects.bulk_create([
+        Parcela(
+            contrato=contrato,
+            ciclo=ciclo,
+            numero=i + 1,
+            vencimento=inicio + relativedelta(months=i),
+            created_by=user,
+            updated_by=user,
+        )
+        for i in range(quantidade)
+    ])
+
+
+def renovar_parcelas(contrato, meses, user=None):
+    """Gera um novo ciclo de parcelas na sequência do último vencimento e
+    estende o vencimento do contrato. Não salva o contrato: quem chama salva.
+    Retorna (parcelas, ciclo)."""
+    ultima = contrato.parcelas.order_by("-vencimento").first()
+    if ultima:
+        inicio = ultima.vencimento + relativedelta(months=1)
+        ciclo = contrato.parcelas.aggregate(models.Max("ciclo"))["ciclo__max"] + 1
+    else:
+        inicio = contrato.data_vencimento_primeira_parcela or contrato.data_assinatura
+        ciclo = 1
+
+    parcelas = gerar_parcelas(contrato, inicio, meses, ciclo, user)
+
+    contrato.data_ultima_parcela = inicio + relativedelta(months=meses - 1)
+    if contrato.data_vencimento_contrato:
+        contrato.data_vencimento_contrato += relativedelta(months=meses)
+    else:
+        contrato.data_vencimento_contrato = contrato.data_ultima_parcela
+    return parcelas, ciclo
 
 
 class DocumentoContrato(BaseAudit):

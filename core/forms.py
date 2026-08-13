@@ -67,8 +67,6 @@ class ContratoForm(forms.ModelForm):
         widgets = {
             'vigencia_meses': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
             'valor_mensalidade': forms.NumberInput(attrs={'class': 'form-control'}),
-            'primeiro_pagamento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'segundo_pagamento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'data_assinatura': forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'}),
             'data_vencimento_primeira_parcela': forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'}),
             'data_ultima_parcela': forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'}),
@@ -79,8 +77,6 @@ class ContratoForm(forms.ModelForm):
         labels = {
             'vigencia_meses': 'Vigência (em meses)',
             'valor_mensalidade': 'Valor da Mensalidade',
-            'primeiro_pagamento': 'Primeiro Pagamento',
-            'segundo_pagamento': 'Segundo Pagamento',
             'data_assinatura': 'Data da Assinatura',
             'data_vencimento_primeira_parcela': 'Vencimento da Primeira Parcela',
             'data_ultima_parcela': 'Data da Última Parcela',
@@ -89,15 +85,6 @@ class ContratoForm(forms.ModelForm):
             'link_notas': 'Link de Notas',
         }
 
-
-class PagamentoForm(forms.ModelForm):
-    class Meta:
-        model = Contrato
-        fields = ["primeiro_pagamento", "segundo_pagamento"]
-        widgets = {
-            "primeiro_pagamento": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-            "segundo_pagamento": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-        }
 
 class DocumentoContratoForm(forms.ModelForm):
     class Meta:

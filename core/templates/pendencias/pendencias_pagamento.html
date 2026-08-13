@@ -1,81 +1,107 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container mt-4">
-    <h2 class="text-light mb-4">💰 Pendências</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-light mb-0">💰 Pendências de Pagamento</h2>
+        <span class="badge bg-secondary fs-6">{{ page_obj.paginator.count }} contrato(s)</span>
+    </div>
 
-    <!-- Pendências de cobrança -->
-    <h4 class="text-warning">⚠️ Pendências de Cobrança</h4>
-    {% if pendencias_cobranca %}
-        <div class="row g-3">
-            {% for contrato in pendencias_cobranca %}
-            <div class="col-12 col-md-6">
-                <div class="card shadow bg-dark border-warning text-light h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Contrato #{{ contrato.id_contrato }}</h5>
-                        <p><strong>Cliente:</strong> {{ contrato.cliente.razao_social }}</p>
-                        <p><strong>Cobrança:</strong> 🚨 Pendente</p>
-                        <form method="post" action="{% url 'marcar_cobranca_gerada' contrato.id_contrato %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-primary">Gerar Cobrança</button>
-                        </form>
+    <!-- Filtros -->
+    <form method="get" class="row g-3 mb-4 text-light">
+        <div class="col-12 col-md-3">
+            <label class="form-label">Razão Social</label>
+            <input type="text" name="nome" value="{{ query_nome }}" class="form-control" placeholder="Razão Social">
+        </div>
+
+        <div class="col-12 col-md-2">
+            <label class="form-label">CPF/CNPJ</label>
+            <input type="text" name="cnpj" value="{{ query_cnpj }}" class="form-control" placeholder="CPF/CNPJ">
+        </div>
+
+        <div class="col-12 col-md-2">
+            <label class="form-label">Vendedor</label>
+            <select name="vendedor" class="form-select">
+                <option value="">-- Vendedor --</option>
+                {% for v in vendedores %}
+                <option value="{{ v.id }}" {% if query_vendedor == v.id|stringformat:"s" %}selected{% endif %}>{{ v.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 col-md-2">
+            <label class="form-label">Situação</label>
+            <select name="situacao" class="form-select">
+                <option value="">-- Todas --</option>
+                <option value="vencidos" {% if query_situacao == "vencidos" %}selected{% endif %}>Com parcela vencida</option>
+                <option value="a_vencer" {% if query_situacao == "a_vencer" %}selected{% endif %}>Somente a vencer</option>
+            </select>
+        </div>
+
+        <div class="col-6 col-md-1 align-self-end">
+            <label class="form-label">Itens</label>
+            <select name="itens" class="form-select" onchange="this.form.submit()">
+                <option value="10" {% if itens_por_pagina == 10 %}selected{% endif %}>10</option>
+                <option value="25" {% if itens_por_pagina == 25 %}selected{% endif %}>25</option>
+                <option value="50" {% if itens_por_pagina == 50 %}selected{% endif %}>50</option>
+            </select>
+        </div>
+
+        <div class="col-6 col-md-2 d-grid align-self-end">
+            <button type="submit" class="btn btn-light">Filtrar</button>
+        </div>
+    </form>
+
+    <div class="row g-3">
+        {% for contrato in page_obj %}
+        {% with resumo=contrato.resumo_parcelas %}
+        <div class="col-12 col-lg-6">
+            <div class="card shadow bg-dark text-light h-100 {% if resumo.vencidas %}border-danger{% else %}border-secondary{% endif %}">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <a href="{% url 'contrato_detail' contrato.id_contrato %}" class="text-light text-decoration-none">
+                            <strong>#{{ contrato.id_contrato|stringformat:"05d" }}</strong> · {{ contrato.cliente.razao_social }}
+                        </a>
+                        <div class="small text-muted">
+                            {{ resumo.pagas }}/{{ resumo.total }} pagas
+                            {% if resumo.vencidas %}· <span class="text-danger">{{ resumo.vencidas }} vencida(s)</span>{% endif %}
+                            {% if contrato.proximo_vencimento %}· próximo vencimento {{ contrato.proximo_vencimento|date:"d/m/Y" }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        {% if contrato.link_cobranca %}
+                        <a href="{{ contrato.link_cobranca }}" target="_blank" class="btn btn-sm btn-outline-light"
+                            title="Abrir link de cobrança">
+                            <i class="bi bi-receipt"></i>
+                        </a>
+                        {% endif %}
+                        {% with fone=contrato.cliente.telefone_financeiro|default:contrato.cliente.telefone %}
+                        {% if fone %}
+                        <a href="https://wa.me/{{ fone }}" target="_blank" class="btn btn-sm btn-success"
+                            title="Abrir WhatsApp ({{ fone }})">
+                            <i class="bi bi-whatsapp"></i> WhatsApp
+                        </a>
+                        {% endif %}
+                        {% endwith %}
                     </div>
                 </div>
-            </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="alert alert-success">✅ Nenhuma pendência de cobrança.</div>
-    {% endif %}
-
-    <hr class="border-secondary my-4">
-
-    <!-- Pendências de pagamento -->
-    <h4 class="text-danger">💸 Pendências de Pagamento</h4>
-    {% if pendencias_pagamento %}
-        <div class="row g-3">
-            {% for contrato in pendencias_pagamento %}
-            <div class="col-12 col-md-6">
-                <div class="card shadow bg-dark border-danger text-light h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Contrato #{{ contrato.id_contrato }}</h5>
-                        <p><strong>Cliente:</strong> {{ contrato.cliente.razao_social }}</p>
-
-                        <!-- Primeiro pagamento -->
-                        <p>
-                            <strong>Primeiro pagamento:</strong>
-                            {% if contrato.primeiro_pagamento %}
-                                ✅ Pago em {{ contrato.primeiro_pagamento }}
-                            {% else %}
-                                <span class="text-danger">🚨 Pendente</span>
-                                <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 1 %}" class="d-flex mt-2 flex-column flex-sm-row gap-2">
-                                    {% csrf_token %}
-                                    <input type="date" name="data_pagamento" class="form-control form-control-sm">
-                                    <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
-                                </form>
-                            {% endif %}
-                        </p>
-
-                        <!-- Segundo pagamento -->
-                        <p>
-                            <strong>Segundo pagamento:</strong>
-                            {% if contrato.segundo_pagamento %}
-                                ✅ Pago em {{ contrato.segundo_pagamento }}
-                            {% else %}
-                                <span class="text-danger">🚨 Pendente</span>
-                                <form method="post" action="{% url 'marcar_pagamento' contrato.id_contrato 2 %}" class="d-flex mt-2 flex-column flex-sm-row gap-2">
-                                    {% csrf_token %}
-                                    <input type="date" name="data_pagamento" class="form-control form-control-sm">
-                                    <button type="submit" class="btn btn-sm btn-success">Marcar Pago</button>
-                                </form>
-                            {% endif %}
-                        </p>
-                    </div>
+                <div class="card-body p-2">
+                    {% include "partials/_parcelas.html" with parcelas=contrato.parcelas.all %}
                 </div>
             </div>
-            {% endfor %}
         </div>
-    {% else %}
-        <div class="alert alert-success">✅ Nenhuma pendência de pagamento.</div>
+        {% endwith %}
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-success mb-0">✅ Nenhuma pendência de pagamento.</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-end mt-3 mb-1">
+        <small class="text-muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</small>
+    </div>
+    {% include "partials/pagination.html" %}
     {% endif %}
 </div>
 {% endblock %}

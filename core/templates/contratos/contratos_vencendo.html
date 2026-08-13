@@ -21,8 +21,10 @@
             </thead>
             <tbody>
                 {% for contrato in page_obj %}
-                <tr class="{% if contrato.data_vencimento_contrato <= hoje %}table-danger{% endif %}">
-                    <td><a href="{% url 'contrato_detail' contrato.id_contrato %}" class="text-light">#{{ contrato.id_contrato|stringformat:"05d" }}</a></td>
+                <tr>
+                    <td class="{% if contrato.data_vencimento_contrato <= hoje %}border-start border-danger border-4{% endif %}">
+                        <a href="{% url 'contrato_detail' contrato.id_contrato %}" class="text-light">#{{ contrato.id_contrato|stringformat:"05d" }}</a>
+                    </td>
                     <td>{{ contrato.cliente.razao_social }}</td>
                     <td>{{ contrato.data_vencimento_contrato|date:"d/m/Y" }}</td>
                     <td>
@@ -33,9 +35,22 @@
                         {% endif %}
                     </td>
                     <td>
-                        <form method="post" action="{% url 'renovar_contrato' contrato.id_contrato %}" class="d-inline">
+                        <form method="post" action="{% url 'renovar_contrato' contrato.id_contrato %}"
+                            class="d-inline-flex align-items-center gap-1 me-1"
+                            onsubmit="return confirm('Renovar por ' + this.meses.value + ' mês(es)? Serão geradas ' + this.meses.value + ' parcela(s).');">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-success">🔄 Renovar +30 dias</button>
+                            <label class="text-light small mb-0">Meses:</label>
+                            <input type="number" name="meses" min="1" value="1" required
+                                class="form-control form-control-sm" style="width:4.5rem"
+                                title="Quantidade de meses/parcelas a gerar na renovação">
+                            <button type="submit" class="btn btn-sm btn-success">🔄 Renovar</button>
+                        </form>
+                        <form method="post" action="{% url 'nao_renovar_contrato' contrato.id_contrato %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Marcar este contrato como não renovado? Ele sairá da lista de vencimentos.');">
+                                Não renovar
+                            </button>
                         </form>
                     </td>
                 </tr>

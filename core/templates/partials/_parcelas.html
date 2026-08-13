@@ -1,0 +1,51 @@
+{# Tabela de parcelas: vencimento + status + botão rápido de baixa. #}
+{% if parcelas %}
+<div class="table-responsive">
+    <table class="table table-dark table-sm table-hover align-middle mb-0">
+        <thead>
+            <tr class="text-muted">
+                <th style="width:3rem">#</th>
+                <th>Vencimento</th>
+                <th>Status</th>
+                <th class="text-end" style="width:4rem">Ação</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for parcela in parcelas %}
+            <tr>
+                <td>
+                    {{ parcela.numero }}
+                    {% if parcela.ciclo > 1 %}<small class="text-muted">·{{ parcela.ciclo }}</small>{% endif %}
+                </td>
+                <td>{{ parcela.vencimento|date:"d/m/Y" }}</td>
+                <td>
+                    {% if parcela.situacao == 'pago' %}
+                    <span class="badge bg-success">Pago em {{ parcela.pago_em|date:"d/m/Y" }}</span>
+                    {% elif parcela.situacao == 'vencido' %}
+                    <span class="badge bg-danger">Vencido</span>
+                    {% else %}
+                    <span class="badge bg-secondary">A vencer</span>
+                    {% endif %}
+                </td>
+                <td class="text-end">
+                    <form method="post" action="{% url 'marcar_parcela_paga' parcela.id %}" class="d-inline">
+                        {% csrf_token %}
+                        {% if from_detail %}<input type="hidden" name="from_detail" value="1">{% endif %}
+                        {% if parcela.situacao == 'pago' %}
+                        <input type="hidden" name="desmarcar" value="1">
+                        <button type="submit" class="btn btn-sm btn-outline-light border-0 py-0 px-2"
+                            title="Desfazer baixa da parcela {{ parcela.numero }}">✕</button>
+                        {% else %}
+                        <button type="submit" class="btn btn-sm btn-success py-0 px-2"
+                            title="Marcar parcela {{ parcela.numero }} como paga hoje">💲</button>
+                        {% endif %}
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="text-muted mb-0">Nenhuma parcela gerada.</p>
+{% endif %}

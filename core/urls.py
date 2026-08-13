@@ -8,6 +8,7 @@ urlpatterns = [
     path("", views.contrato_list, name="home"),
     path("contratos/vencimentos/", views.contratos_vencendo, name="contratos_vencendo"),
     path("contratos/<int:pk>/renovar/", views.renovar_contrato, name="renovar_contrato"),
+    path("contratos/<int:pk>/nao-renovar/", views.nao_renovar_contrato, name="nao_renovar_contrato"),
 
     # Pendências globais
     path("pendencias/video/", views.pendencias_video, name="pendencias_video"),
@@ -17,7 +18,7 @@ urlpatterns = [
 
     # Ações
     path("contrato/<int:video_id>/ativar_video/", views.ativar_video, name="ativar_video"),
-    path("contrato/<int:contrato_id>/marcar_pagamento/<int:parcela>/", views.marcar_pagamento, name="marcar_pagamento"),
+    path("parcela/<int:parcela_id>/marcar_paga/", views.marcar_parcela_paga, name="marcar_parcela_paga"),
 
     # Exclusão de documento
     path("documento/<int:pk>/delete/", views.documento_delete, name="documento_delete"),

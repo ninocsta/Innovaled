@@ -1,6 +1,9 @@
 from django.shortcuts import render
 from django.core.paginator import Paginator
-from .models import Contrato, Vendedor, Local, Cliente, StatusContrato, DocumentoContrato, Video, Registro
+from .models import (
+    Contrato, Vendedor, Local, Cliente, StatusContrato, DocumentoContrato,
+    Video, Registro, Parcela, gerar_parcelas, renovar_parcelas,
+)
 from .forms import ClienteForm, ContratoForm, DocumentoContratoForm, VideoFormSet, VideoForm, ContratoRegistroForm
 from django.contrib import messages
 from django.shortcuts import redirect
@@ -9,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from datetime import datetime, timedelta
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Min
 from core.services import dashboard as dashboard_service
 from django.http import HttpResponse
 import pandas as pd
@@ -146,6 +149,15 @@ def contrato_create(request):
             contrato.status = status_ativo
             contrato.save()
 
+            # Gerar as parcelas do contrato (uma por mês de vigência)
+            if contrato.data_vencimento_primeira_parcela and contrato.vigencia_meses:
+                gerar_parcelas(
+                    contrato,
+                    contrato.data_vencimento_primeira_parcela,
+                    contrato.vigencia_meses,
+                    user=request.user,
+                )
+
             # Salvar vídeos vinculados
             video_formset.instance = contrato
             videos = video_formset.save(commit=False)
@@ -230,6 +242,7 @@ def contrato_detail(request, pk):
     contrato = get_object_or_404(Contrato, pk=pk)
     documentos = contrato.documentos.all()
     videos = contrato.videos.all()
+    parcelas = contrato.parcelas.all()
     locais = Local.objects.all()  # Para popular o select no modal
     now = timezone.now()
 
@@ -240,9 +253,8 @@ def contrato_detail(request, pk):
     # Flags para pendências
     tem_video_pendente = videos_pendentes.exists()
     tem_cobranca_pendente = not contrato.cobranca_gerada
-    tem_pagamento_pendente = contrato.cobranca_gerada and (
-        not contrato.primeiro_pagamento or not contrato.segundo_pagamento
-    )
+    tem_pagamento_pendente = parcelas.filter(pago_em__isnull=True).exists()
+    tem_pagamento = parcelas.filter(pago_em__isnull=False).exists()
 
     if request.method == "POST":
         form = DocumentoContratoForm(request.POST, request.FILES)
@@ -264,9 +276,11 @@ def contrato_detail(request, pk):
         "videos": videos,
         "videos_pendentes": videos_pendentes,
         "videos_ativos": videos_ativos,
+        "parcelas": parcelas,
         "tem_video_pendente": tem_video_pendente,
         "tem_cobranca_pendente": tem_cobranca_pendente,
         "tem_pagamento_pendente": tem_pagamento_pendente,
+        "tem_pagamento": tem_pagamento,
         "locais": locais,
         "now": now,
     })
@@ -276,12 +290,13 @@ def contrato_detail(request, pk):
 @login_required
 def pendencias_video(request):
     # Filtra contratos que têm pelo menos um vídeo OFF
-    # e que já possuem primeiro_pagamento
+    # e que já tiveram alguma parcela paga
     contratos = (
         Contrato.objects.annotate(
             videos_pendentes=Count("videos", filter=Q(videos__status=False))
         )
-        .filter(videos_pendentes__gt=0, primeiro_pagamento__isnull=False)
+        .filter(videos_pendentes__gt=0, parcelas__pago_em__isnull=False)
+        .distinct()
         .select_related("cliente")
         .prefetch_related("videos")  # otimiza query dos vídeos
     )
@@ -292,23 +307,60 @@ def pendencias_video(request):
 # views.py
 @login_required
 def pendencias_pagamento(request):
-    # pendências de cobrança (cobrança ainda não gerada)
-    pendencias_cobranca = Contrato.objects.filter(
-        cobranca_gerada=False
-    ).select_related("cliente")
+    query_nome = request.GET.get("nome", "").strip()
+    query_cnpj = request.GET.get("cnpj", "").strip()
+    query_vendedor = request.GET.get("vendedor", "").strip()
+    query_situacao = request.GET.get("situacao", "").strip()
+    hoje = timezone.now().date()
 
-    # pendências de pagamento (cobrança gerada, mas falta algum pagamento)
-    pendencias_pagamento = Contrato.objects.filter(
-        cobranca_gerada=True
-    ).filter(
-        Q(primeiro_pagamento__isnull=True) | Q(segundo_pagamento__isnull=True)
-    ).select_related("cliente")
+    # parcelas em aberto; se filtrar por vencidas, tem que ser a MESMA parcela
+    # (por isso os dois Q no mesmo filter, senão o Django cria dois JOINs)
+    em_aberto = Q(parcelas__pago_em__isnull=True)
+    if query_situacao == "vencidos":
+        em_aberto &= Q(parcelas__vencimento__lt=hoje)
 
-    context = {
-        "pendencias_cobranca": pendencias_cobranca,
-        "pendencias_pagamento": pendencias_pagamento,
-    }
-    return render(request, "pendencias/pendencias_pagamento.html", context)
+    # contratos ativos com alguma parcela em aberto, os mais atrasados primeiro
+    contratos = (
+        Contrato.objects.filter(em_aberto, data_cancelamento_contrato__isnull=True)
+        .annotate(proximo_vencimento=Min("parcelas__vencimento"))
+        .distinct()
+        .select_related("cliente", "vendedor")
+        .prefetch_related("parcelas")
+        .order_by("proximo_vencimento", "cliente__razao_social")
+    )
+
+    if query_situacao == "a_vencer":
+        contratos = contratos.exclude(parcelas__pago_em__isnull=True, parcelas__vencimento__lt=hoje)
+    if query_nome:
+        contratos = contratos.filter(cliente__razao_social__icontains=query_nome)
+    if query_cnpj:
+        contratos = contratos.filter(cliente__cpf_cnpj__icontains=query_cnpj)
+    if query_vendedor:
+        contratos = contratos.filter(vendedor_id=query_vendedor)
+
+    try:
+        itens_por_pagina = int(request.GET.get("itens", 10))
+        if itens_por_pagina <= 0:
+            itens_por_pagina = 10
+    except ValueError:
+        itens_por_pagina = 10
+
+    page_obj = Paginator(contratos, itens_por_pagina).get_page(request.GET.get("page"))
+
+    params = request.GET.copy()
+    params.pop("page", None)
+    extra_query = "&" + params.urlencode() if params else ""
+
+    return render(request, "pendencias/pendencias_pagamento.html", {
+        "page_obj": page_obj,
+        "query_nome": query_nome,
+        "query_cnpj": query_cnpj,
+        "query_vendedor": query_vendedor,
+        "query_situacao": query_situacao,
+        "itens_por_pagina": itens_por_pagina,
+        "vendedores": Vendedor.objects.all(),
+        "extra_query": extra_query,
+    })
 
 
 
@@ -323,33 +375,27 @@ def marcar_cobranca_gerada(request, contrato_id):
 
 
 @login_required
-def marcar_pagamento(request, contrato_id, parcela):
-    contrato = get_object_or_404(Contrato, pk=contrato_id)
+@require_POST
+def marcar_parcela_paga(request, parcela_id):
+    parcela = get_object_or_404(Parcela, pk=parcela_id)
 
-    if request.method == "POST":
+    if request.POST.get("desmarcar"):
+        parcela.pago_em = None
+        msg = f"Parcela {parcela.numero} do contrato {parcela.contrato_id:05d} voltou para pendente."
+    else:
         data = request.POST.get("data_pagamento")
-        if data:
-            data_pagto = datetime.strptime(data, "%Y-%m-%d").date()
-        else:
-            data_pagto = timezone.now().date()
-
-        if parcela == 1:
-            contrato.primeiro_pagamento = data_pagto
-        elif parcela == 2:
-            contrato.segundo_pagamento = data_pagto
-        contrato.updated_by = request.user
-        contrato.save()
-        messages.success(
-            request,
-            f"{'Primeiro' if parcela==1 else 'Segundo'} pagamento do contrato {contrato.id_contrato:05d} registrado em {data_pagto}."
+        parcela.pago_em = (
+            datetime.strptime(data, "%Y-%m-%d").date() if data else timezone.now().date()
         )
+        msg = f"Parcela {parcela.numero} do contrato {parcela.contrato_id:05d} paga em {parcela.pago_em:%d/%m/%Y}."
 
-        # Redirecionamento inteligente
-        next_page = request.POST.get("from_detail")
-        if next_page:
-            return redirect("contrato_detail", contrato.pk)
-        return redirect("pendencias_pagamento")
+    parcela.updated_by = request.user
+    parcela.save()
+    messages.success(request, msg)
 
+    # Redirecionamento inteligente
+    if request.POST.get("from_detail"):
+        return redirect("contrato_detail", parcela.contrato_id)
     return redirect("pendencias_pagamento")
 
 
@@ -455,20 +501,77 @@ def contratos_vencendo(request):
 
 
 @login_required
+@require_POST
 def renovar_contrato(request, pk):
     contrato = get_object_or_404(Contrato, pk=pk)
 
-    if contrato.data_vencimento_contrato:
-        contrato.data_vencimento_contrato += relativedelta(months=1)
-        contrato.updated_by = request.user
-        contrato.save()
-        messages.success(
-            request,
-            f"📅 Contrato #{contrato.id_contrato} renovado por mais 30 dias (novo vencimento: {contrato.data_vencimento_contrato.strftime('%d/%m/%Y')}).",
-        )
-    else:
-        messages.warning(request, f"⚠ O contrato #{contrato.id_contrato} não possui data de vencimento definida.")
+    try:
+        meses = int(request.POST.get("meses") or contrato.vigencia_meses)
+    except ValueError:
+        meses = contrato.vigencia_meses
 
+    if meses < 1:
+        messages.warning(request, "⚠ Informe uma quantidade de meses maior que zero.")
+        return redirect("contratos_vencendo")
+
+    _, ciclo = renovar_parcelas(contrato, meses, user=request.user)
+
+    status_ativo, _ = StatusContrato.objects.get_or_create(
+        nome_status="Ativo",
+        defaults={"created_by": request.user, "updated_by": request.user},
+    )
+    contrato.status = status_ativo
+    contrato.data_cancelamento_contrato = None
+    contrato.updated_by = request.user
+    contrato.save()
+
+    Registro.objects.create(
+        contrato=contrato,
+        observacao=(
+            f"Renovação: {meses} parcela(s) geradas (ciclo {ciclo}). "
+            f"Novo vencimento do contrato: {contrato.data_vencimento_contrato:%d/%m/%Y}."
+        ),
+        created_by=request.user,
+        updated_by=request.user,
+    )
+
+    messages.success(
+        request,
+        f"📅 Contrato #{contrato.id_contrato:05d} renovado por {meses} mês(es). "
+        f"Novo vencimento: {contrato.data_vencimento_contrato:%d/%m/%Y}.",
+    )
+    return redirect("contratos_vencendo")
+
+
+@login_required
+@require_POST
+def nao_renovar_contrato(request, pk):
+    contrato = get_object_or_404(Contrato, pk=pk)
+
+    status_nao_renovado = StatusContrato.objects.filter(nome_status="Não Renovado").first()
+    if not status_nao_renovado:
+        status_nao_renovado = StatusContrato.objects.create(
+            nome_status="Não Renovado",
+            created_by=request.user,
+            updated_by=request.user,
+        )
+
+    contrato.data_cancelamento_contrato = timezone.now().date()
+    contrato.status = status_nao_renovado
+    contrato.updated_by = request.user
+    contrato.save()
+
+    Registro.objects.create(
+        contrato=contrato,
+        observacao="Contrato marcado como não renovado.",
+        created_by=request.user,
+        updated_by=request.user,
+    )
+
+    messages.success(
+        request,
+        f"Contrato #{contrato.id_contrato:05d} marcado como não renovado.",
+    )
     return redirect("contratos_vencendo")
 
 
@@ -503,7 +606,7 @@ def dashboard_view(request):
 def exportar_contratos_excel(request):
     qs = Contrato.objects.select_related(
         "cliente", "vendedor", "forma_pagamento", "status", "banco"
-    ).prefetch_related("videos__local")
+    ).prefetch_related("videos__local", "parcelas")
 
     # ----- FILTROS -----
     nome = request.GET.get("nome")
@@ -539,6 +642,8 @@ def exportar_contratos_excel(request):
         tempos_videos = ", ".join([str(v.tempo_video) for v in contrato.videos.all()])
         datas_subida = ", ".join([v.data_subiu.strftime("%d/%m/%Y") for v in contrato.videos.all() if v.data_subiu])
 
+        resumo = contrato.resumo_parcelas
+
         data.append({
             "ID Contrato": contrato.id_contrato,
             "Cliente": contrato.cliente.razao_social,
@@ -550,8 +655,9 @@ def exportar_contratos_excel(request):
             "Vendedor": contrato.vendedor.nome if contrato.vendedor else "",
             "Banco": contrato.banco.nome if contrato.banco else "",
             "Cobrança Gerada": "Sim" if contrato.cobranca_gerada else "Não",
-            "Primeiro Pagamento": contrato.primeiro_pagamento.strftime("%d/%m/%Y") if contrato.primeiro_pagamento else "",
-            "Segundo Pagamento": contrato.segundo_pagamento.strftime("%d/%m/%Y") if contrato.segundo_pagamento else "",
+            "Parcelas Pagas": f"{resumo['pagas']}/{resumo['total']}",
+            "Parcelas Vencidas": resumo["vencidas"],
+            "Último Pagamento": resumo["ultimo_pagamento"].strftime("%d/%m/%Y") if resumo["ultimo_pagamento"] else "",
             "Data Assinatura": contrato.data_assinatura.strftime("%d/%m/%Y") if contrato.data_assinatura else "",
             "Data Vencimento Contrato": contrato.data_vencimento_contrato.strftime("%d/%m/%Y") if contrato.data_vencimento_contrato else "",
             "Data Cancelamento": contrato.data_cancelamento_contrato.strftime("%d/%m/%Y") if contrato.data_cancelamento_contrato else "",
